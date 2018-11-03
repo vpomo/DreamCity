@@ -412,6 +412,17 @@ contract HouseStorage is Ownable, InvestorStorage {
         arrayLastPayment.push(_date);
     }
 
+    function removeElemLastPayment(uint index)  returns(uint[]) {
+        if (index >= arrayLastPayment.length) return;
+
+        for (uint i = index; i<arrayLastPayment.length-1; i++){
+            arrayLastPayment[i] = arrayLastPayment[i+1];
+        }
+        delete arrayLastPayment[arrayLastPayment.length-1];
+        arrayLastPayment.length--;
+        return arrayLastPayment;
+    }
+
     function checkStopBuyTokens(uint256 _date) public returns(bool) {
         uint256 timeLastPayment = arrayLastPayment[arrayLastPayment.length-1];
         require (_date > timeLastPayment);
