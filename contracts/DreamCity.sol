@@ -301,8 +301,10 @@ contract HouseStorage is Ownable {
     uint256 public currentHouse;
 
     uint256 public NUMBER_TOKENS_PER_FLOOR = 1000;
-    uint256 public NUMBER_TOKENS_MIN_SALE = 6;
+    uint256 public MIN_NUMBER_SALES_TOKENS = 6;
     uint256 public TOKENS_COST_INCREASE_RATIO = 105;
+
+    bool public stopBuyTokens = false;
 
     uint256 public currentHouse;
 
@@ -314,9 +316,7 @@ contract HouseStorage is Ownable {
         uint256 lastPaymentTime;
     }
 
-    struct PaymentTime {
-        uint256 currTime;
-    }
+    uint256[] arrayLastPayment;
 
     mapping (uint256 => House) private houses;
 
@@ -331,6 +331,51 @@ contract HouseStorage is Ownable {
         paymentTokenTotal = houses[_numberHouse].paymentTokenTotal;
     }
 
+    function validBuyToken(uint256 _date) public view returns (
+        uint256 lastFloor, uint256 paymentTokenPerFloor, uint256 paymentTokenTotal
+    ) {
+
+        lastFloor = houses[_numberHouse].lastFloor;
+        paymentTokenPerFloor = houses[_numberHouse].paymentTokenPerFloor;
+        paymentTokenTotal = houses[_numberHouse].paymentTokenTotal;
+    }
+    function validBuyToken(uint256 _date) public view returns (
+        uint256 lastFloor, uint256 paymentTokenPerFloor, uint256 paymentTokenTotal
+    ) {
+
+        lastFloor = houses[_numberHouse].lastFloor;
+        paymentTokenPerFloor = houses[_numberHouse].paymentTokenPerFloor;
+        paymentTokenTotal = houses[_numberHouse].paymentTokenTotal;
+    }
+
+    function setTimePayment(uint256 _date) public {
+        require(_date > 0);
+        if (arrayLastPayment.length > MIN_NUMBER_SALES_TOKENS) {
+            arrayLastPayment = removeElemLastPayment(0);
+        }
+        arrayLastPayment.push(_date);
+    }
+
+    function checkStopBuyTokens(uint256 _date) public returns(bool) {
+        uint256 timeLastPayment = arrayLastPayment[arrayLastPayment.length-1];
+        require (_date > timeLastPayment);
+        uint8 countLastInvestorPerDay = 0;
+        if (stopBuyTokens == false) {
+            for (uint256 i = 0; i < arrayLastPayment.length-1; i++){
+                if ( _date - arrayLastPayment[i] < 1 days  ) {
+                    countLastInvestorPerDay++;
+                }
+            }
+            if (countLastInvestorPerDay < MIN_NUMBER_SALES_TOKENS) {
+                stopBuyTokens = true;
+            }
+        } else {
+            if (_date > timeLastPayment + 1 days) {
+                stopBuyTokens = false;
+            }
+        }
+        return stopBuyTokens;
+    }
 }
 
 /**
@@ -354,17 +399,29 @@ contract InvestorStorage is Ownable {
     constructor() public {
     }
 
-    function newInvestor(address addr, uint256 investment, uint256 amountToken, uint256 paymentTime) public returns (bool) {
-        Investor storage inv = investors[addr];
-        if (inv.investment != 0 || investment == 0) {
+    function newInvestor(address _investor, uint256 _investment, uint256 _amountToken, uint256 _paymentTime) public returns (bool) {
+        Investor inv = investors[_investor];
+        if (!checkNewInvestor(_investor)) {
             return false;
         }
-        inv.investment = investment;
-        inv.amountToken = amountToken;
-        inv.paymentTime = paymentTime;
-
+        addFundToInvestor(_investor, _investment, _amountToken, _paymentTime);
         countInvestors++;
         return true;
+    }
+
+    function checkNewInvestor(address _investor) public view returns (bool) {
+        Investor inv = investors[_investor];
+        if (inv.paymentTime > 0 && inv.investment > 0) {
+            return false;
+        }
+        return true;
+    }
+
+    function addFundToInvestor(address _investor, uint256 _investment, uint256 _amountToken, uint256 _paymentTime) public {
+        Investor storage inv = investors[_investor];
+        inv.investment = inv.investment.add(_investment);
+        inv.amountToken = inv.amountToken.add(_amountToken);
+        inv.paymentTime = _paymentTime;
     }
 
 }
@@ -373,8 +430,12 @@ contract InvestorStorage is Ownable {
 contract DreamCity is Ownable, InvestorStorage, MintableToken {
     using SafeMath for uint256;
 
-    uint256 public totalEth;
+    uint256 public totalEth = 0;
+    uint256 public tokenAllocated = 0;
+
+
     uint256 public currentPriceToken;
+    uint256 simulateDate = 0;
 
     uint256 FIRST_PRICE_TOKEN = 0.05 ether;
     uint256 ETH_FOR_SALE_TOKEN = 0.0001 ether;
@@ -423,17 +484,22 @@ contract DreamCity is Ownable, InvestorStorage, MintableToken {
         uint256 weiAmount = msg.value;
         uint256 tokens = validPurchaseTokens(weiAmount);
         if (tokens == 0) {revert();}
-        weiRaised = weiRaised.add(weiAmount);
-        tokenAllocated = tokenAllocated.add(tokens);
-        mint(_investor, tokens, owner);
 
-        emit TokenPurchase(_investor, weiAmount, tokens);
-        if (deposited[_investor] == 0) {
-            countInvestor = countInvestor.add(1);
+        uint256 currentDate = getCurrentDate();
+        if (!checkStopBuyTokens(currentDate)) {
+            totalEth = totalEth.add(weiAmount);
+
+            tokenAllocated = tokenAllocated.add(tokens);
+            mint(_investor, tokens, owner);
+
+            emit TokenPurchase(_investor, weiAmount, tokens);
+            if (checkNewInvestor(_investor)) {
+                newInvestor(_investor, weiAmount, tokens, currentDate);
+            } else {
+                addFundToInvestor(_investor, weiAmount, tokens, currentDate);
+            }
+            wallet.transfer(weiAmount);
         }
-        deposit(_investor);
-        wallet.transfer(weiAmount);
-        return tokens;
     }
 
     function saleTokens(address _investor) public payable returns (uint256){
@@ -443,52 +509,24 @@ contract DreamCity is Ownable, InvestorStorage, MintableToken {
         return tokens;
     }
 
-    function getTotalAmountOfTokens(uint256 _weiAmount) internal returns (uint256) {
-        uint256 currentDate = now;
-        //currentDate = 1547114400; // Thu, 10 Jan 2019 10:00:00 GMT // for test's
-        uint currentPeriod = 0;
-        currentPeriod = getPeriod(currentDate);
-        uint256 amountOfTokens = 0;
-        if(currentPeriod > 0){
-            if(currentPeriod == 1){
-                amountOfTokens = _weiAmount.mul(rate).mul(130).div(100);
-                if (tokenAllocated.add(amountOfTokens) > limitStage1) {
-                    currentPeriod = currentPeriod.add(1);
-                    amountOfTokens = 0;
-                }
-            }
-            if(currentPeriod == 2){
-                amountOfTokens = _weiAmount.mul(rate).mul(120).div(100);
-                if (tokenAllocated.add(amountOfTokens) > limitStage2) {
-                    currentPeriod = currentPeriod.add(1);
-                    amountOfTokens = 0;
-                }
-            }
-            if(currentPeriod == 3){
-                amountOfTokens = _weiAmount.mul(rate).mul(110).div(100);
-                if (tokenAllocated.add(amountOfTokens) > limitStage3) {
-                    currentPeriod = 0;
-                    amountOfTokens = 0;
-                }
-            }
+    function validPurchaseTokens(uint256 _weiAmount) public returns (uint256) {
+        uint256 addTokens = getTotalAmountOfTokens(_weiAmount);
+        if (tokenAllocated.add(addTokens) > balances[owner]) {
+            emit TokenLimitReached(msg.sender, tokenAllocated, addTokens);
+            return 0;
         }
-        emit CurrentPeriod(currentPeriod);
+
+        return addTokens;
+    }
+
+    function getTotalAmountOfTokens(uint256 _weiAmount) internal returns (uint256) {
+        uint256 amountOfTokens = 0;
+        amountOfTokens = _weiAmount.mul(currentPriceToken);
+
         return amountOfTokens;
     }
 
     function getPeriod(uint256 _currentDate) public view returns (uint) {
-        if(_currentDate < startTimeIcoStage1){
-            return 0;
-        }
-        if( startTimeIcoStage1 <= _currentDate && _currentDate <= endTimeIcoStage1){
-            return 1;
-        }
-        if( startTimeIcoStage2 <= _currentDate && _currentDate <= endTimeIcoStage2){
-            return 2;
-        }
-        if( startTimeIcoStage3 <= _currentDate && _currentDate <= endTimeIcoStage3){
-            return 3;
-        }
         return 0;
     }
 
@@ -509,26 +547,21 @@ contract DreamCity is Ownable, InvestorStorage, MintableToken {
         return deposited[_investor];
     }
 
-    function validPurchaseTokens(uint256 _weiAmount) public returns (uint256) {
-        uint256 addTokens = getTotalAmountOfTokens(_weiAmount);
-        if (tokenAllocated.add(addTokens) > balances[owner]) {
-            emit TokenLimitReached(msg.sender, tokenAllocated, addTokens);
-            return 0;
-        }
-        if (weiRaised.add(_weiAmount) > hardWeiCap) {
-            emit HardCapReached();
-            return 0;
-        }
-        if (_weiAmount < weiMinSale) {
-            return 0;
-        }
-
-    return addTokens;
-    }
-
     function validSaleTokens(address _investor) public returns (uint256) {
         uint256 saleTokens = 0;
         return saleTokens;
+    }
+
+    function getCurrentDate() public view returns (uint256) {
+        if (simulateDate > 0) {
+            return simulateDate;
+        }
+        return now;
+    }
+
+    function setSimulateDate(uint256 _newDate) public onlyOwner {
+        require(_newDate >= 0);
+        simulateDate = _newDate;
     }
 
 }
