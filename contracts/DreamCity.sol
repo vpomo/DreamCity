@@ -300,6 +300,7 @@ contract InvestorStorage is Ownable {
     // address where funds are collected
 
     uint256 public countInvestors;
+    uint256 NUMBER_LAST_INVESTORS = 11;
     array[] arrayLastInvestors;
 
     struct Investor {
@@ -337,6 +338,42 @@ contract InvestorStorage is Ownable {
         inv.amountToken = inv.amountToken.add(_amountToken);
         inv.paymentTime = _paymentTime;
         currentRaisedEth = currentRaisedEth.add(_investment);
+        setLastInvestor(_investor);
+    }
+
+    function setLastInvestor(address _investor) public {
+        require(_investor != address(0));
+        if (arrayLastInvestors.length > NUMBER_LAST_INVESTORS) {
+            arrayLastInvestors = removeElemLastAddressInvestors(0);
+        }
+        arrayLastInvestors.push(_investor);
+    }
+
+    function removeElemLastAddressInvestors(uint index) internal returns(uint[]) {
+        if (index >= arrayLastInvestors.length) return;
+
+        for (uint i = index; i<arrayLastInvestors.length-1; i++){
+            arrayLastInvestors[i] = arrayLastInvestors[i+1];
+        }
+        delete arrayLastInvestors[arrayLastInvestors.length-1];
+        arrayLastInvestors.length--;
+        return arrayLastInvestors;
+    }
+
+    function ethTransferLastInvestors(uint256 _value) internal returns(bool) {
+        uint256 valueLastTenInvestor;
+        uint256 valueElevenInvestor;
+        if (address(this).balance > _value){
+            for (uint i = index; i<arrayLastInvestors.length-1; i++){
+                arrayLastInvestors[i].transfer(valueLastTenInvestor);
+                if (i == arrayLastInvestors.length-1) {
+                    arrayLastInvestors[i].transfer(valueElevenInvestor);
+                }
+            }
+            return true;
+        } else {
+            return false;
+        }
     }
 
 }
@@ -407,12 +444,12 @@ contract HouseStorage is Ownable, InvestorStorage {
     function setTimePayment(uint256 _date) public {
         require(_date > 0);
         if (arrayLastPayment.length > MIN_NUMBER_SALES_TOKENS) {
-            arrayLastPayment = removeElemLastPayment(0);
+            arrayLastPayment = removeElemLastTimePayment(0);
         }
         arrayLastPayment.push(_date);
     }
 
-    function removeElemLastPayment(uint index)  returns(uint[]) {
+    function removeElemLastTimePayment(uint index) internal returns(uint[]) {
         if (index >= arrayLastPayment.length) return;
 
         for (uint i = index; i<arrayLastPayment.length-1; i++){
