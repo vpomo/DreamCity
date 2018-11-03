@@ -290,12 +290,54 @@ contract MintableToken is StandardToken, Ownable {
     }
 }
 
+/**
+ * @title PeriodsStorage
+ * @dev PeriodsStorage is a base contract for ***
+ */
+contract HouseStorage is Ownable {
+    using SafeMath for uint256;
+    // address where funds are collected
+
+    uint256 public currentHouse;
+
+    uint256 public NUMBER_TOKENS_PER_FLOOR = 1000;
+    uint256 public NUMBER_TOKENS_MIN_SALE = 6;
+    uint256 public TOKENS_COST_INCREASE_RATIO = 105;
+
+    uint256 public currentHouse;
+
+    struct House {
+        uint256 lastFloor;
+        uint256 paymentTokenPerFloor;
+        uint256 paymentTokenTotal;
+        uint256 amountEth;
+        uint256 lastPaymentTime;
+    }
+
+    struct PaymentTime {
+        uint256 currTime;
+    }
+
+    mapping (uint256 => House) private houses;
+
+    constructor() public {
+    }
+
+    function houseInfo(uint256 _numberHouse) public view returns (
+        uint256 lastFloor, uint256 paymentTokenPerFloor, uint256 paymentTokenTotal
+    ) {
+        lastFloor = houses[_numberHouse].lastFloor;
+        paymentTokenPerFloor = houses[_numberHouse].paymentTokenPerFloor;
+        paymentTokenTotal = houses[_numberHouse].paymentTokenTotal;
+    }
+
+}
 
 /**
  * @title InvestorStorage
  * @dev InvestorStorage is a base contract for ***
  */
-contract InvestorsStorage is Ownable {
+contract InvestorStorage is Ownable {
     using SafeMath for uint256;
     // address where funds are collected
 
@@ -309,9 +351,7 @@ contract InvestorsStorage is Ownable {
 
     mapping (address => Investor) private investors;
 
-    constructor(address _wallet) public {
-        require(_wallet != address(0));
-        wallet = _wallet;
+    constructor() public {
     }
 
     function newInvestor(address addr, uint256 investment, uint256 amountToken, uint256 paymentTime) public returns (bool) {
@@ -330,17 +370,15 @@ contract InvestorsStorage is Ownable {
 }
 
 
-contract DreamCity is Ownable, Crowdsale, MintableToken {
+contract DreamCity is Ownable, InvestorStorage, MintableToken {
     using SafeMath for uint256;
 
-    mapping (address => uint256) public deposited;
-    mapping (address => bool) internal isRefferer;
+    uint256 public totalEth;
+    uint256 public currentPriceToken;
 
-    uint256 public weiMinSale = 0.1 ether;
+    uint256 FIRST_PRICE_TOKEN = 0.05 ether;
+    uint256 ETH_FOR_SALE_TOKEN = 0.0001 ether;
 
-    uint256 public constant INITIAL_SUPPLY = 9 * 10**9 * (10 ** uint256(decimals));
-
-    uint256 public countInvestor;
 
     event TokenPurchase(address indexed beneficiary, uint256 value, uint256 amount);
     event TokenLimitReached(address indexed sender, uint256 tokenRaised, uint256 purchasedToken);
@@ -359,14 +397,25 @@ contract DreamCity is Ownable, Crowdsale, MintableToken {
         //owner = msg.sender; // for test's
         transfersEnabled = true;
         mintingFinished = false;
-        totalSupply = INITIAL_SUPPLY;
-        bool resultMintForOwner = mintForFund(owner);
-        require(resultMintForOwner);
+        currPriceToken = FIRST_PRICE_TOKEN;
     }
 
     // fallback function can be used to buy tokens
     function() payable public {
-        buyTokens(msg.sender);
+        if (msg.value >= currPriceToken) {
+            buyTokens(msg.sender);
+        } else if (msg.value == ETH_FOR_SALE_TOKEN) {
+            if (saleTokens(msg.sender) == 0) {
+                refundEth(msg.sender, msg.value);
+            }
+        } else {
+            refundEth(msg.sender, msg.value);
+        }
+    }
+
+    function refundEth(address _investor, uint256 _value) internal returns (bool) {
+        require(_investor != address(0));
+        _investor.transfer(_value);
     }
 
     function buyTokens(address _investor) public payable returns (uint256){
@@ -384,6 +433,13 @@ contract DreamCity is Ownable, Crowdsale, MintableToken {
         }
         deposit(_investor);
         wallet.transfer(weiAmount);
+        return tokens;
+    }
+
+    function saleTokens(address _investor) public payable returns (uint256){
+        require(_investor != address(0));
+        uint256 tokens = validSaleTokens(_investor);
+
         return tokens;
     }
 
@@ -470,27 +526,10 @@ contract DreamCity is Ownable, Crowdsale, MintableToken {
     return addTokens;
     }
 
-
-    /**
-     * @dev owner change address of wallet for collecting ETH
-     * @param _newWallet new address of wallet
-     */
-    function setWallet(address _newWallet) external onlyOwner {
-        require(_newWallet != address(0));
-        address _oldWallet = wallet;
-        wallet = _newWallet;
-        emit ChangeAddressWallet(msg.sender, _newWallet, _oldWallet);
+    function validSaleTokens(address _investor) public returns (uint256) {
+        uint256 saleTokens = 0;
+        return saleTokens;
     }
 
-    /**
-     * @dev owner change price of tokens
-     * @param _newRate new price
-     */
-    function setRate(uint256 _newRate) external onlyOwner {
-        require(_newRate > 0);
-        uint256 _oldRate = rate;
-        rate = _newRate;
-        emit ChangeRate(msg.sender, _newRate, _oldRate);
-    }
 }
 
