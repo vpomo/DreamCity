@@ -290,11 +290,62 @@ contract MintableToken is StandardToken, Ownable {
     }
 }
 
+
+/**
+ * @title InvestorStorage
+ * @dev InvestorStorage is a base contract for ***
+ */
+contract InvestorStorage is Ownable {
+    using SafeMath for uint256;
+    // address where funds are collected
+
+    uint256 public countInvestors;
+    array[] arrayLastInvestors;
+
+    struct Investor {
+        uint256 investmentEth;
+        uint256 amountToken;
+        uint256 paymentTime;
+    }
+
+    mapping (address => Investor) private investors;
+
+    constructor() public {
+    }
+
+    function newInvestor(address _investor, uint256 _investment, uint256 _amountToken, uint256 _paymentTime) public returns (bool) {
+        Investor inv = investors[_investor];
+        if (!checkNewInvestor(_investor)) {
+            return false;
+        }
+        addFundToInvestor(_investor, _investment, _amountToken, _paymentTime);
+        countInvestors++;
+        return true;
+    }
+
+    function checkNewInvestor(address _investor) public view returns (bool) {
+        Investor inv = investors[_investor];
+        if (inv.paymentTime > 0 && inv.investment > 0) {
+            return false;
+        }
+        return true;
+    }
+
+    function addFundToInvestor(address _investor, uint256 _investment, uint256 _amountToken, uint256 _paymentTime) public {
+        Investor storage inv = investors[_investor];
+        inv.investment = inv.investment.add(_investment);
+        inv.amountToken = inv.amountToken.add(_amountToken);
+        inv.paymentTime = _paymentTime;
+        currentRaisedEth = currentRaisedEth.add(_investment);
+    }
+
+}
+
 /**
  * @title PeriodsStorage
  * @dev PeriodsStorage is a base contract for ***
  */
-contract HouseStorage is Ownable {
+contract HouseStorage is Ownable, InvestorStorage {
     using SafeMath for uint256;
     // address where funds are collected
 
@@ -303,10 +354,15 @@ contract HouseStorage is Ownable {
     uint256 public NUMBER_TOKENS_PER_FLOOR = 1000;
     uint256 public MIN_NUMBER_SALES_TOKENS = 6;
     uint256 public TOKENS_COST_INCREASE_RATIO = 105;
+    uint256 public PERCENT_TO_ADMINISTRATION = 8;
+
+    address public administrationWallet;
 
     bool public stopBuyTokens = false;
 
     uint256 public currentHouse;
+
+    uint256 public currentRaisedEth;
 
     struct House {
         uint256 lastFloor;
@@ -376,56 +432,14 @@ contract HouseStorage is Ownable {
         }
         return stopBuyTokens;
     }
-}
 
-/**
- * @title InvestorStorage
- * @dev InvestorStorage is a base contract for ***
- */
-contract InvestorStorage is Ownable {
-    using SafeMath for uint256;
-    // address where funds are collected
-
-    uint256 public countInvestors;
-
-    struct Investor {
-        uint256 investmentEth;
-        uint256 amountToken;
-        uint256 paymentTime;
-    }
-
-    mapping (address => Investor) private investors;
-
-    constructor() public {
-    }
-
-    function newInvestor(address _investor, uint256 _investment, uint256 _amountToken, uint256 _paymentTime) public returns (bool) {
-        Investor inv = investors[_investor];
-        if (!checkNewInvestor(_investor)) {
-            return false;
-        }
-        addFundToInvestor(_investor, _investment, _amountToken, _paymentTime);
-        countInvestors++;
-        return true;
-    }
-
-    function checkNewInvestor(address _investor) public view returns (bool) {
-        Investor inv = investors[_investor];
-        if (inv.paymentTime > 0 && inv.investment > 0) {
-            return false;
-        }
-        return true;
-    }
-
-    function addFundToInvestor(address _investor, uint256 _investment, uint256 _amountToken, uint256 _paymentTime) public {
-        Investor storage inv = investors[_investor];
-        inv.investment = inv.investment.add(_investment);
-        inv.amountToken = inv.amountToken.add(_amountToken);
-        inv.paymentTime = _paymentTime;
+    function closeBuyTokens(uint256 _date) public returns(bool) {
+        uint256 amountToAdministration = currentRaisedEth.mul(PERCENT_TO_ADMINISTRATION).div(100);
+        administrationWallet.transfer(amountToAdministration);
+        return stopBuyTokens;
     }
 
 }
-
 
 contract DreamCity is Ownable, InvestorStorage, MintableToken {
     using SafeMath for uint256;
@@ -492,12 +506,12 @@ contract DreamCity is Ownable, InvestorStorage, MintableToken {
             tokenAllocated = tokenAllocated.add(tokens);
             mint(_investor, tokens, owner);
 
-            emit TokenPurchase(_investor, weiAmount, tokens);
             if (checkNewInvestor(_investor)) {
                 newInvestor(_investor, weiAmount, tokens, currentDate);
             } else {
                 addFundToInvestor(_investor, weiAmount, tokens, currentDate);
             }
+            emit TokenPurchase(_investor, weiAmount, tokens);
             wallet.transfer(weiAmount);
         }
     }
