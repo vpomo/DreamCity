@@ -393,6 +393,7 @@ contract HouseStorage is Ownable, InvestorStorage {
     uint256 public averagePriceToken = 0;
 
     uint256 public NUMBER_TOKENS_PER_FLOOR = 1000;
+    uint256 public MAX_NUMBER_FLOOR_PER_HOUSE = 1000;
     uint256 public MIN_NUMBER_SALES_TOKENS = 6;
     uint256 public TOKENS_COST_INCREASE_RATIO = 105;
     uint256 public PERCENT_TO_ADMINISTRATION = 8;
@@ -469,7 +470,7 @@ contract HouseStorage is Ownable, InvestorStorage {
                     countLastInvestorPerDay++;
                 }
             }
-            if (countLastInvestorPerDay < MIN_NUMBER_SALES_TOKENS) {
+            if (countLastInvestorPerDay < MIN_NUMBER_SALES_TOKENS || houses[currentHouse].lastFloor >= MAX_NUMBER_FLOOR_PER_HOUSE) {
                 stopBuyTokens = true;
                 closeBuyTokens();
             }
@@ -525,7 +526,7 @@ contract HouseStorage is Ownable, InvestorStorage {
         return houses[_numberHouse].paymentTokenTotal;
     }
 
-    function getBuyToken(uint256 _amountEth) public returns(uint256 tokens, uint8 nextFloor) {
+    function getBuyToken(uint256 _amountEth) public returns(uint256 tokens, uint256 remainEth) {
         require(_amountEth > 0);
         (tokens, eths) = checkBuyTokenPerFloor(_amountEth);
         uint256 freeEth = _amountEth.sub(eths);
@@ -534,19 +535,23 @@ contract HouseStorage is Ownable, InvestorStorage {
         writePurchaise(priceToken, eths, tokens);
 
         while (freeEth > 0) {
-            nextFloor();
-            priceToken = priceToken.mul(TOKENS_COST_INCREASE_RATIO).div(100);
-            addBuyToken = freeEth.div(priceToken);
-            if (addBuyToken > NUMBER_TOKENS_PER_FLOOR) {
-                tokens = tokens.add(NUMBER_TOKENS_PER_FLOOR);
-                eths = eths.add(NUMBER_TOKENS_PER_FLOOR.mul(priceToken));
-                freeEth = freeEth.sub(eths);
+            if (nextFloor()) {
+                priceToken = priceToken.mul(TOKENS_COST_INCREASE_RATIO).div(100);
+                addBuyToken = freeEth.div(priceToken);
+                if (addBuyToken > NUMBER_TOKENS_PER_FLOOR) {
+                    tokens = tokens.add(NUMBER_TOKENS_PER_FLOOR);
+                    eths = eths.add(NUMBER_TOKENS_PER_FLOOR.mul(priceToken));
+                    freeEth = freeEth.sub(eths);
+                } else {
+                    tokens = tokens.add(addBuyToken);
+                    eths = eths.add(freeEth);
+                    freeEth = 0;
+                    remainEth = 0;
+                }
+                writePurchaise(priceToken, eths, tokens);
             } else {
-                tokens = tokens.add(addBuyToken);
-                eths = eths.add(freeEth);
-                freeEth = 0;
+                remainEth = freeEth;
             }
-            writePurchaise(priceToken, eths, tokens);
         }
     }
 
@@ -560,8 +565,13 @@ contract HouseStorage is Ownable, InvestorStorage {
         houses[currentHouse].paymentTokenTotal = houses[currentHouse].paymentTokenTotal.add(_amountToken);
     }
 
-    function nextFloor() public {
+    function nextFloor() public returns (bool result){
         houses[currentHouse].lastFloor = houses[currentHouse].lastFloor.add(1);
+        if (houses[currentHouse].lastFloor < MAX_NUMBER_FLOOR_PER_HOUSE) {
+            result = true;
+        } else {
+            result = false;
+        }
     }
 
 }
