@@ -435,6 +435,7 @@ contract HouseStorage is Ownable, InvestorStorage {
         uint256 paymentTokenTotal;
         uint256 totalEth;
         uint256 priceToken;
+        uint256 refundToken;
     }
 
     uint256[] arrayLastPayment;
@@ -607,9 +608,11 @@ contract HouseStorage is Ownable, InvestorStorage {
                     amountWallet = refundEth;
                 }
             }
+            houses[currentHouse].refundToken =  houses[currentHouse].refundToken.add(inv.amountToken);
             inv.amountToken = 0;
             inv.refundEth = inv.refundEth.add(refundEth.sub(amountWallet));
             inv.sellTime = _date;
+
             wallet.transfer(amountWallet);
             _investor.transfer(refundEth.sub(amountWallet));
         }
@@ -677,9 +680,7 @@ contract DreamCity is Ownable, InvestorStorage, MintableToken {
         if (msg.value >= currPriceToken) {
             buyTokens(msg.sender);
         } else if (msg.value == ETH_FOR_SALE_TOKEN) {
-            if (saleTokens(msg.sender) == 0) {
-                refundEth(msg.sender, msg.value);
-            }
+            saleTokens(msg.sender);
         } else {
             refundEth(msg.sender, msg.value);
         }
@@ -715,6 +716,7 @@ contract DreamCity is Ownable, InvestorStorage, MintableToken {
 
     function saleTokens(address _investor) public payable {
         require(_investor != address(0));
+        require(msg.value == ETH_FOR_SALE_TOKEN);
         uint256 currentDate = getCurrentDate();
         require(getSaleToken(_investor, currentDate));
     }
