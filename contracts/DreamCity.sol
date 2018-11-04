@@ -390,7 +390,7 @@ contract HouseStorage is Ownable, InvestorStorage {
     using SafeMath for uint256;
     // address where funds are collected
 
-    uint256 public currentFloorToken;
+    uint256 public averagePriceToken = 0;
 
     uint256 public NUMBER_TOKENS_PER_FLOOR = 1000;
     uint256 public MIN_NUMBER_SALES_TOKENS = 6;
@@ -402,8 +402,6 @@ contract HouseStorage is Ownable, InvestorStorage {
     bool public stopBuyTokens = false;
 
     uint256 public currentHouse;
-
-    uint256 public currentRaisedEth;
 
     struct House {
         uint256 lastFloor;
@@ -473,19 +471,27 @@ contract HouseStorage is Ownable, InvestorStorage {
             }
             if (countLastInvestorPerDay < MIN_NUMBER_SALES_TOKENS) {
                 stopBuyTokens = true;
+                closeBuyTokens();
             }
         } else {
             if (_date > timeLastPayment + 1 days) {
                 stopBuyTokens = false;
+                currentHouse++;
+                initHouse(currentHouse, averagePriceToken);
             }
         }
         return stopBuyTokens;
     }
 
-    function closeBuyTokens(uint256 _date) public returns(bool) {
+    function closeBuyTokens() public returns(bool) {
+        uint256 currentRaisedEth = getTotalEthPerHouse(currentHouse);
+
         uint256 amountToAdministration = currentRaisedEth.mul(PERCENT_TO_ADMINISTRATION).div(100);
         uint256 totalPercent = PERCENT_TO_ADMINISTRATION + PERCENT_TO_LAST_TEN_INVESTOR + PERCENT_TO_LAST_INVESTOR;
-        if (address(this).balance > currentRaisedEth.mul(totalPercent).div(100)){
+        uint256 transferEth = currentRaisedEth.mul(totalPercent).div(100);
+        uint256 freeEth = currentRaisedEth.sub(transferEth);
+        averagePriceToken = freeEth.div(getTotalTokenPerHouse(currentHouse));
+        if (address(this).balance > transferEth){
             administrationWallet.transfer(amountToAdministration);
             ethTransferLastInvestors(currentRaisedEth);
             return true;
@@ -511,15 +517,24 @@ contract HouseStorage is Ownable, InvestorStorage {
         return NUMBER_TOKENS_PER_FLOOR.sub(houses[_numberHouse].paymentTokenPerFloor);
     }
 
+    function getTotalEthPerHouse(uint256 _numberHouse) public returns(uint256 tokens) {
+        return houses[_numberHouse].totalEth;
+    }
+
+    function getTotalTokenPerHouse(uint256 _numberHouse) public returns(uint256 tokens) {
+        return houses[_numberHouse].paymentTokenTotal;
+    }
+
     function getBuyToken(uint256 _amountEth) public returns(uint256 tokens, uint8 nextFloor) {
         require(_amountEth > 0);
-        nextFloor = 0;
         (tokens, eths) = checkBuyTokenPerFloor(_amountEth);
         uint256 freeEth = _amountEth.sub(eths);
         uint256 priceToken = houses[currentHouse].priceToken;
         uint256 addBuyToken = 0;
+        writePurchaise(priceToken, eths, tokens);
+
         while (freeEth > 0) {
-            nextFloor++;
+            nextFloor();
             priceToken = priceToken.mul(TOKENS_COST_INCREASE_RATIO).div(100);
             addBuyToken = freeEth.div(priceToken);
             if (addBuyToken > NUMBER_TOKENS_PER_FLOOR) {
@@ -531,20 +546,22 @@ contract HouseStorage is Ownable, InvestorStorage {
                 eths = eths.add(freeEth);
                 freeEth = 0;
             }
+            writePurchaise(priceToken, eths, tokens);
         }
     }
 
-    function checkJumpNextFloor(uint256 _amountEth) public returns(bool) {
+    function writePurchaise(uint256 _priceToken, uint256 _amountEth, uint256 _amountToken) public {
         require(_amountEth > 0);
-        uint256 currentFloor = houses[currentHouse].lastFloor;
-        if (checkBuyToken(_amountEth) >  NUMBER_TOKENS_PER_FLOOR) {
-            houses[currentHouse].paymentTokenPerFloor = houses[currentHouse].paymentTokenPerFloor.add(_amountToken);
-            houses[currentHouse].paymentTokenTotal = houses[currentHouse].paymentTokenTotal.add(_amountToken);
-            houses[currentHouse].amountEth = houses[currentHouse].amountEth.add(_amountEth);
-        } else {
+        require(_amountToken > 0);
 
-        }
-        return false;
+        houses[currentHouse].priceToken = _priceToken;
+        houses[currentHouse].totalEth = houses[currentHouse].totalEth.add(_amountEth);
+        houses[currentHouse].paymentTokenPerFloor = houses[currentHouse].paymentTokenPerFloor.add(_amountToken);
+        houses[currentHouse].paymentTokenTotal = houses[currentHouse].paymentTokenTotal.add(_amountToken);
+    }
+
+    function nextFloor() public {
+        houses[currentHouse].lastFloor = houses[currentHouse].lastFloor.add(1);
     }
 
 }
@@ -605,14 +622,14 @@ contract DreamCity is Ownable, InvestorStorage, MintableToken {
     function buyTokens(address _investor) public payable returns (uint256){
         require(_investor != address(0));
         uint256 weiAmount = msg.value;
-        uint256 tokens = validPurchaseTokens(weiAmount);
+        uint256 tokens = getBuyToken(weiAmount);
         if (tokens == 0) {revert();}
 
         uint256 currentDate = getCurrentDate();
         if (!checkStopBuyTokens(currentDate)) {
             totalEth = totalEth.add(weiAmount);
-
             tokenAllocated = tokenAllocated.add(tokens);
+            setTimePayment(currentDate);
             mint(_investor, tokens, owner);
 
             if (checkNewInvestor(_investor)) {
