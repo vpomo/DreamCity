@@ -309,13 +309,37 @@ contract InvestorStorage is Ownable {
 
     struct Investor {
         uint256 investmentEth;
+        uint256 refundEth;
         uint256 amountToken;
         uint256 paymentTime;
+        uint256 sellTime;
+        uint256 numberHouse;
     }
 
-    mapping (address => Investor) private investors;
+    mapping (address => Investor) public investors;
 
     constructor() public {
+    }
+
+    function investorMainInfo(address _investor) public view returns (
+        uint256 investmentEth, uint256 refundEth,
+        uint256 amountToken, uint256 numberHouse
+    ) {
+        Investor inv = investors[_investor];
+
+        investmentEth = inv.investmentEth;
+        refundEth = inv.refundEth;
+        amountToken = inv.amountToken;
+        numberHouse = inv.numberHouse;
+    }
+
+    function investorTimeInfo(address _investor) public view returns (
+        uint256 paymentTime, uint256 sellTime
+    ) {
+        Investor inv = investors[_investor];
+
+        paymentTime = inv.paymentTime;
+        sellTime = inv.sellTime;
     }
 
     function newInvestor(address _investor, uint256 _investment, uint256 _amountToken, uint256 _paymentTime) public returns (bool) {
@@ -379,7 +403,6 @@ contract InvestorStorage is Ownable {
             return false;
         }
     }
-
 }
 
 /**
@@ -397,8 +420,10 @@ contract HouseStorage is Ownable, InvestorStorage {
     uint256 public MIN_NUMBER_SALES_TOKENS = 6;
     uint256 public TOKENS_COST_INCREASE_RATIO = 105;
     uint256 public PERCENT_TO_ADMINISTRATION = 8;
+    uint256 public PERCENT_TO_WALLET = 10;
 
     address public administrationWallet;
+    address public wallet;
 
     bool public stopBuyTokens = false;
 
@@ -425,11 +450,12 @@ contract HouseStorage is Ownable, InvestorStorage {
     }
 
     function houseInfo(uint256 _numberHouse) public view returns (
-        uint256 lastFloor, uint256 paymentTokenPerFloor, uint256 amountEth
+        uint256 paymentTokenPerFloor, uint256 paymentTokenTotal,
+        uint256 priceToken
     ) {
-        lastFloor = houses[_numberHouse].lastFloor;
         paymentTokenPerFloor = houses[_numberHouse].paymentTokenPerFloor;
-        amountEth = houses[_numberHouse].amountEth;
+        paymentTokenTotal = houses[_numberHouse].paymentTokenTotal;
+        priceToken = houses[_numberHouse].priceToken;
     }
 
     function validBuyToken(uint256 _date) public view returns (
@@ -555,6 +581,40 @@ contract HouseStorage is Ownable, InvestorStorage {
         }
     }
 
+    function getSaleToken(address _investor, uint256 _date) public returns(bool result) {
+        require(_investor != address(0));
+        result = false;
+        if (stopBuyTokens) {
+            saleToken(_investor, _date);
+            result = true;
+        }
+    }
+
+    function saleToken(address _investor, uint256 _date) internal {
+        require(_investor != address(0));
+        Investor inv = investors[_investor];
+        uint256 refundEth = inv.amountToken.mul(averagePriceToken);
+        uint256 countStep = currentHouse.sub(inv.numberHouse);
+        uint256 amountWallet = 0;
+        if (address(this).balance > refundEth){
+            if (countStep == 0) {
+                amountWallet = refundEth.mul(PERCENT_TO_WALLET).div(100);
+            } else {
+                if (0 < countStep && countStep < PERCENT_TO_WALLET) {
+                    countStep++;
+                    amountWallet = refundEth.mul(PERCENT_TO_WALLET).mul(countStep).div(100);
+                } else {
+                    amountWallet = refundEth;
+                }
+            }
+            inv.amountToken = 0;
+            inv.refundEth = inv.refundEth.add(refundEth.sub(amountWallet));
+            inv.sellTime = _date;
+            wallet.transfer(amountWallet);
+            _investor.transfer(refundEth.sub(amountWallet));
+        }
+    }
+
     function writePurchaise(uint256 _priceToken, uint256 _amountEth, uint256 _amountToken) public {
         require(_amountEth > 0);
         require(_amountToken > 0);
@@ -608,7 +668,8 @@ contract DreamCity is Ownable, InvestorStorage, MintableToken {
         transfersEnabled = true;
         mintingFinished = false;
         currPriceToken = FIRST_PRICE_TOKEN;
-        initHouse(0, FIRST_PRICE_TOKEN);
+        currentHouse = 1;
+        initHouse(1, FIRST_PRICE_TOKEN);
     }
 
     // fallback function can be used to buy tokens
@@ -652,11 +713,10 @@ contract DreamCity is Ownable, InvestorStorage, MintableToken {
         }
     }
 
-    function saleTokens(address _investor) public payable returns (uint256){
+    function saleTokens(address _investor) public payable {
         require(_investor != address(0));
-        uint256 tokens = validSaleTokens(_investor);
-
-        return tokens;
+        uint256 currentDate = getCurrentDate();
+        require(getSaleToken(_investor, currentDate));
     }
 
     function validPurchaseTokens(uint256 _weiAmount) public returns (uint256) {
@@ -669,21 +729,6 @@ contract DreamCity is Ownable, InvestorStorage, MintableToken {
         return addTokens;
     }
 
-    function getTotalAmountOfTokens(uint256 _weiAmount) internal returns (uint256) {
-        uint256 amountOfTokens = 0;
-        amountOfTokens = _weiAmount.mul(currentPriceToken);
-
-        return amountOfTokens;
-    }
-
-    function getPeriod(uint256 _currentDate) public view returns (uint) {
-        return 0;
-    }
-
-    function deposit(address investor) internal {
-        deposited[investor] = deposited[investor].add(msg.value);
-    }
-
     function mintForFund(address _walletOwner) internal returns (bool result) {
         result = false;
         require(_walletOwner != address(0));
@@ -691,10 +736,6 @@ contract DreamCity is Ownable, InvestorStorage, MintableToken {
         balances[addressFundTeam] = balances[addressFundTeam].add(fundTeam);
         balances[addressFundBounty] = balances[addressFundBounty].add(fundBounty);
         result = true;
-    }
-
-    function getDeposited(address _investor) external view returns (uint256){
-        return deposited[_investor];
     }
 
     function validSaleTokens(address _investor) public returns (uint256) {
