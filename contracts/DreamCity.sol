@@ -301,6 +301,10 @@ contract InvestorStorage is Ownable {
 
     uint256 public countInvestors;
     uint256 NUMBER_LAST_INVESTORS = 11;
+    uint256 public PERCENT_TO_LAST_TEN_INVESTOR = 1;
+    uint256 public PERCENT_TO_LAST_INVESTOR = 1;
+
+
     array[] arrayLastInvestors;
 
     struct Investor {
@@ -361,13 +365,13 @@ contract InvestorStorage is Ownable {
     }
 
     function ethTransferLastInvestors(uint256 _value) internal returns(bool) {
-        uint256 valueLastTenInvestor;
-        uint256 valueElevenInvestor;
-        if (address(this).balance > _value){
+        uint256 valueLastTenInvestor = _value.mul(PERCENT_TO_LAST_TEN_INVESTOR).div(1000);
+        uint256 valueLastInvestor = _value.mul(PERCENT_TO_LAST_INVESTOR).div(100);
+        if (address(this).balance > valueLastTenInvestor.mul(10) + valueLastInvestor){
             for (uint i = index; i<arrayLastInvestors.length-1; i++){
                 arrayLastInvestors[i].transfer(valueLastTenInvestor);
                 if (i == arrayLastInvestors.length-1) {
-                    arrayLastInvestors[i].transfer(valueElevenInvestor);
+                    arrayLastInvestors[i].transfer(valueLastInvestor);
                 }
             }
             return true;
@@ -386,7 +390,7 @@ contract HouseStorage is Ownable, InvestorStorage {
     using SafeMath for uint256;
     // address where funds are collected
 
-    uint256 public currentHouse;
+    uint256 public currentFloorToken;
 
     uint256 public NUMBER_TOKENS_PER_FLOOR = 1000;
     uint256 public MIN_NUMBER_SALES_TOKENS = 6;
@@ -424,14 +428,6 @@ contract HouseStorage is Ownable, InvestorStorage {
         paymentTokenTotal = houses[_numberHouse].paymentTokenTotal;
     }
 
-    function validBuyToken(uint256 _date) public view returns (
-        uint256 lastFloor, uint256 paymentTokenPerFloor, uint256 paymentTokenTotal
-    ) {
-
-        lastFloor = houses[_numberHouse].lastFloor;
-        paymentTokenPerFloor = houses[_numberHouse].paymentTokenPerFloor;
-        paymentTokenTotal = houses[_numberHouse].paymentTokenTotal;
-    }
     function validBuyToken(uint256 _date) public view returns (
         uint256 lastFloor, uint256 paymentTokenPerFloor, uint256 paymentTokenTotal
     ) {
@@ -483,8 +479,13 @@ contract HouseStorage is Ownable, InvestorStorage {
 
     function closeBuyTokens(uint256 _date) public returns(bool) {
         uint256 amountToAdministration = currentRaisedEth.mul(PERCENT_TO_ADMINISTRATION).div(100);
-        administrationWallet.transfer(amountToAdministration);
-        return stopBuyTokens;
+        uint256 totalPercent = PERCENT_TO_ADMINISTRATION + PERCENT_TO_LAST_TEN_INVESTOR + PERCENT_TO_LAST_INVESTOR;
+        if (address(this).balance > currentRaisedEth.mul(totalPercent).div(100)){
+            administrationWallet.transfer(amountToAdministration);
+            ethTransferLastInvestors(currentRaisedEth);
+            return true;
+        }
+        return false;
     }
 
 }
