@@ -511,30 +511,33 @@ contract HouseStorage is Ownable, InvestorStorage {
         return NUMBER_TOKENS_PER_FLOOR.sub(houses[_numberHouse].paymentTokenPerFloor);
     }
 
-    function checkBuyToken(uint256 _amountEth) public returns(uint256 tokens, uint256 eths) {
+    function getBuyToken(uint256 _amountEth) public returns(uint256 tokens, uint8 nextFloor) {
         require(_amountEth > 0);
+        nextFloor = 0;
         (tokens, eths) = checkBuyTokenPerFloor(_amountEth);
         uint256 freeEth = _amountEth.sub(eths);
         uint256 priceToken = houses[currentHouse].priceToken;
         uint256 addBuyToken = 0;
         while (freeEth > 0) {
+            nextFloor++;
             priceToken = priceToken.mul(TOKENS_COST_INCREASE_RATIO).div(100);
             addBuyToken = freeEth.div(priceToken);
             if (addBuyToken > NUMBER_TOKENS_PER_FLOOR) {
                 tokens = tokens.add(NUMBER_TOKENS_PER_FLOOR);
                 eths = eths.add(NUMBER_TOKENS_PER_FLOOR.mul(priceToken));
-                freeEth = freeEth.sub(NUMBER_TOKENS_PER_FLOOR.mul(priceToken));
+                freeEth = freeEth.sub(eths);
             } else {
                 tokens = tokens.add(addBuyToken);
                 eths = eths.add(freeEth);
+                freeEth = 0;
             }
         }
     }
 
-    function checkJumpNextFloor(uint256 _amountToken, uint256 _amountEth) public returns(bool) {
-        require(_amountToken >= 0);
+    function checkJumpNextFloor(uint256 _amountEth) public returns(bool) {
+        require(_amountEth > 0);
         uint256 currentFloor = houses[currentHouse].lastFloor;
-        if (houses[currentHouse].paymentTokenPerFloor.add(_amountToken) <=  NUMBER_TOKENS_PER_FLOOR) {
+        if (checkBuyToken(_amountEth) >  NUMBER_TOKENS_PER_FLOOR) {
             houses[currentHouse].paymentTokenPerFloor = houses[currentHouse].paymentTokenPerFloor.add(_amountToken);
             houses[currentHouse].paymentTokenTotal = houses[currentHouse].paymentTokenTotal.add(_amountToken);
             houses[currentHouse].amountEth = houses[currentHouse].amountEth.add(_amountEth);
