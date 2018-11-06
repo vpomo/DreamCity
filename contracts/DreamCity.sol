@@ -43,158 +43,6 @@ library SafeMath {
     }
 }
 
-
-contract ERC20Basic {
-    uint256 public totalSupply;
-
-    bool public transfersEnabled;
-
-    function balanceOf(address who) public view returns (uint256);
-
-    function transfer(address to, uint256 value) public returns (bool);
-
-    event Transfer(address indexed from, address indexed to, uint256 value);
-}
-
-
-contract ERC20 {
-    uint256 public totalSupply;
-
-    bool public transfersEnabled;
-
-    function balanceOf(address _owner) public constant returns (uint256 balance);
-
-    function transfer(address _to, uint256 _value) public returns (bool success);
-
-    function transferFrom(address _from, address _to, uint256 _value) public returns (bool success);
-
-    function approve(address _spender, uint256 _value) public returns (bool success);
-
-    function allowance(address _owner, address _spender) public constant returns (uint256 remaining);
-
-    event Transfer(address indexed _from, address indexed _to, uint256 _value);
-
-    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
-}
-
-
-contract BasicToken is ERC20Basic {
-    using SafeMath for uint256;
-
-    mapping (address => uint256) balances;
-
-    /**
-    * Protection against short address attack
-    */
-    modifier onlyPayloadSize(uint numwords) {
-        assert(msg.data.length == numwords * 32 + 4);
-        _;
-    }
-
-    /**
-    * @dev transfer token for a specified address
-    * @param _to The address to transfer to.
-    * @param _value The amount to be transferred.
-    */
-    function transfer(address _to, uint256 _value) public onlyPayloadSize(2) returns (bool) {
-        require(_to != address(0));
-        require(_value <= balances[msg.sender]);
-        require(transfersEnabled);
-
-        // SafeMath.sub will throw if there is not enough balance.
-        balances[msg.sender] = balances[msg.sender].sub(_value);
-        balances[_to] = balances[_to].add(_value);
-        emit Transfer(msg.sender, _to, _value);
-        return true;
-    }
-
-    /**
-    * @dev Gets the balance of the specified address.
-    * @param _owner The address to query the the balance of.
-    * @return An uint256 representing the amount owned by the passed address.
-    */
-    function balanceOf(address _owner) public constant returns (uint256 balance) {
-        return balances[_owner];
-    }
-}
-
-
-contract StandardToken is ERC20, BasicToken {
-
-    mapping (address => mapping (address => uint256)) internal allowed;
-
-    /**
-     * @dev Transfer tokens from one address to another
-     * @param _from address The address which you want to send tokens from
-     * @param _to address The address which you want to transfer to
-     * @param _value uint256 the amount of tokens to be transferred
-     */
-    function transferFrom(address _from, address _to, uint256 _value) public onlyPayloadSize(3) returns (bool) {
-        require(_to != address(0));
-        require(_value <= balances[_from]);
-        require(_value <= allowed[_from][msg.sender]);
-        require(transfersEnabled);
-
-        balances[_from] = balances[_from].sub(_value);
-        balances[_to] = balances[_to].add(_value);
-        allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
-        emit Transfer(_from, _to, _value);
-        return true;
-    }
-
-    /**
-     * @dev Approve the passed address to spend the specified amount of tokens on behalf of msg.sender.
-     *
-     * Beware that changing an allowance with this method brings the risk that someone may use both the old
-     * and the new allowance by unfortunate transaction ordering. One possible solution to mitigate this
-     * race condition is to first reduce the spender's allowance to 0 and set the desired value afterwards:
-     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-     * @param _spender The address which will spend the funds.
-     * @param _value The amount of tokens to be spent.
-     */
-    function approve(address _spender, uint256 _value) public returns (bool) {
-        allowed[msg.sender][_spender] = _value;
-        emit Approval(msg.sender, _spender, _value);
-        return true;
-    }
-
-    /**
-     * @dev Function to check the amount of tokens that an owner allowed to a spender.
-     * @param _owner address The address which owns the funds.
-     * @param _spender address The address which will spend the funds.
-     * @return A uint256 specifying the amount of tokens still available for the spender.
-     */
-    function allowance(address _owner, address _spender) public onlyPayloadSize(2) constant returns (uint256 remaining) {
-        return allowed[_owner][_spender];
-    }
-
-    /**
-     * approve should be called when allowed[_spender] == 0. To increment
-     * allowed value is better to use this function to avoid 2 calls (and wait until
-     * the first transaction is mined)
-     * From MonolithDAO Token.sol
-     */
-    function increaseApproval(address _spender, uint _addedValue) public returns (bool success) {
-        allowed[msg.sender][_spender] = allowed[msg.sender][_spender].add(_addedValue);
-        emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
-        return true;
-    }
-
-    function decreaseApproval(address _spender, uint _subtractedValue) public returns (bool success) {
-        uint oldValue = allowed[msg.sender][_spender];
-        if (_subtractedValue > oldValue) {
-            allowed[msg.sender][_spender] = 0;
-        }
-        else {
-            allowed[msg.sender][_spender] = oldValue.sub(_subtractedValue);
-        }
-        emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
-        return true;
-    }
-
-}
-
-
 /**
  * @title Ownable
  * @dev The Ownable contract has an owner address, and provides basic authorization control
@@ -226,71 +74,6 @@ contract Ownable {
 
 }
 
-
-/**
- * @title Mintable token
- * @dev Simple ERC20 Token example, with mintable token creation
- * @dev Issue: * https://github.com/OpenZeppelin/zeppelin-solidity/issues/120
- * Based on code by TokenMarketNet: https://github.com/TokenMarketNet/ico/blob/master/contracts/MintableToken.sol
- */
-
-contract MintableToken is StandardToken, Ownable {
-    string public constant name = "DreamCityToken";
-    string public constant symbol = "DCT";
-    uint8 public constant decimals = 18;
-    mapping(uint8 => uint8) public approveOwner;
-
-    event Mint(address indexed to, uint256 amount);
-    event MintFinished();
-
-    bool public mintingFinished;
-
-    modifier canMint() {
-        require(!mintingFinished);
-        _;
-    }
-
-    /**
-     * @dev Function to mint tokens
-     * @param _to The address that will receive the minted tokens.
-     * @param _amount The amount of tokens to mint.
-     * @return A boolean that indicates if the operation was successful.
-     */
-    function mint(address _to, uint256 _amount, address _owner) canMint internal returns (bool) {
-        balances[_to] = balances[_to].add(_amount);
-        balances[_owner] = balances[_owner].sub(_amount);
-        emit Mint(_to, _amount);
-        emit Transfer(_owner, _to, _amount);
-        return true;
-    }
-
-    /**
-     * @dev Function to stop minting new tokens.
-     * @return True if the operation was successful.
-     */
-    function finishMinting() onlyOwner canMint internal returns (bool) {
-        mintingFinished = true;
-        emit MintFinished();
-        return true;
-    }
-
-    /**
-     * Peterson's Law Protection
-     * Claim tokens
-     */
-    function claimTokens(address _token) public onlyOwner {
-        if (_token == 0x0) {
-            owner.transfer(address(this).balance);
-            return;
-        }
-        MintableToken token = MintableToken(_token);
-        uint256 balance = token.balanceOf(this);
-        token.transfer(owner, balance);
-        emit Transfer(_token, owner, balance);
-    }
-}
-
-
 /**
  * @title InvestorStorage
  * @dev InvestorStorage is a base contract for ***
@@ -305,7 +88,7 @@ contract InvestorStorage is Ownable {
     uint256 public PERCENT_TO_LAST_INVESTOR = 1;
 
 
-    array[] arrayLastInvestors;
+    address[] arrayLastInvestors;
 
     struct Investor {
         uint256 investmentEth;
@@ -325,7 +108,7 @@ contract InvestorStorage is Ownable {
         uint256 investmentEth, uint256 refundEth,
         uint256 amountToken, uint256 numberHouse
     ) {
-        Investor inv = investors[_investor];
+        Investor storage inv = investors[_investor];
 
         investmentEth = inv.investmentEth;
         refundEth = inv.refundEth;
@@ -336,14 +119,13 @@ contract InvestorStorage is Ownable {
     function investorTimeInfo(address _investor) public view returns (
         uint256 paymentTime, uint256 sellTime
     ) {
-        Investor inv = investors[_investor];
+        Investor storage inv = investors[_investor];
 
         paymentTime = inv.paymentTime;
         sellTime = inv.sellTime;
     }
 
     function newInvestor(address _investor, uint256 _investment, uint256 _amountToken, uint256 _paymentTime) public returns (bool) {
-        Investor inv = investors[_investor];
         if (!checkNewInvestor(_investor)) {
             return false;
         }
@@ -353,8 +135,8 @@ contract InvestorStorage is Ownable {
     }
 
     function checkNewInvestor(address _investor) public view returns (bool) {
-        Investor inv = investors[_investor];
-        if (inv.paymentTime > 0 && inv.investment > 0) {
+        Investor storage inv = investors[_investor];
+        if (inv.paymentTime > 0 && inv.investmentEth > 0) {
             return false;
         }
         return true;
@@ -362,10 +144,9 @@ contract InvestorStorage is Ownable {
 
     function addFundToInvestor(address _investor, uint256 _investment, uint256 _amountToken, uint256 _paymentTime) public {
         Investor storage inv = investors[_investor];
-        inv.investment = inv.investment.add(_investment);
+        inv.investmentEth = inv.investmentEth.add(_investment);
         inv.amountToken = inv.amountToken.add(_amountToken);
         inv.paymentTime = _paymentTime;
-        currentRaisedEth = currentRaisedEth.add(_investment);
         setLastInvestor(_investor);
     }
 
@@ -377,7 +158,7 @@ contract InvestorStorage is Ownable {
         arrayLastInvestors.push(_investor);
     }
 
-    function removeElemLastAddressInvestors(uint index) internal returns(uint[]) {
+    function removeElemLastAddressInvestors(uint index) internal returns(address[]) {
         if (index >= arrayLastInvestors.length) return;
 
         for (uint i = index; i<arrayLastInvestors.length-1; i++){
@@ -392,7 +173,7 @@ contract InvestorStorage is Ownable {
         uint256 valueLastTenInvestor = _value.mul(PERCENT_TO_LAST_TEN_INVESTOR).div(1000);
         uint256 valueLastInvestor = _value.mul(PERCENT_TO_LAST_INVESTOR).div(100);
         if (address(this).balance > valueLastTenInvestor.mul(10) + valueLastInvestor){
-            for (uint i = index; i<arrayLastInvestors.length-1; i++){
+            for (uint i = 0; i<arrayLastInvestors.length-1; i++){
                 arrayLastInvestors[i].transfer(valueLastTenInvestor);
                 if (i == arrayLastInvestors.length-1) {
                     arrayLastInvestors[i].transfer(valueLastInvestor);
@@ -414,6 +195,7 @@ contract HouseStorage is Ownable, InvestorStorage {
     // address where funds are collected
 
     uint256 public averagePriceToken = 0;
+    uint256 public currentPriceToken;
 
     uint256 public NUMBER_TOKENS_PER_FLOOR = 1000;
     uint256 public MAX_NUMBER_FLOOR_PER_HOUSE = 1000;
@@ -457,15 +239,6 @@ contract HouseStorage is Ownable, InvestorStorage {
         paymentTokenPerFloor = houses[_numberHouse].paymentTokenPerFloor;
         paymentTokenTotal = houses[_numberHouse].paymentTokenTotal;
         priceToken = houses[_numberHouse].priceToken;
-    }
-
-    function validBuyToken(uint256 _date) public view returns (
-        uint256 lastFloor, uint256 paymentTokenPerFloor, uint256 paymentTokenTotal
-    ) {
-
-        lastFloor = houses[_numberHouse].lastFloor;
-        paymentTokenPerFloor = houses[_numberHouse].paymentTokenPerFloor;
-        paymentTokenTotal = houses[_numberHouse].paymentTokenTotal;
     }
 
     function setTimePayment(uint256 _date) public {
@@ -527,7 +300,7 @@ contract HouseStorage is Ownable, InvestorStorage {
         return false;
     }
 
-    function checkBuyTokenPerFloor(uint256 _amountEth) public returns(uint256 tokens, uint256 needEth) {
+    function checkBuyTokenPerFloor(uint256 _amountEth) public view returns(uint256 tokens, uint256 needEth) {
         require(_amountEth > 0);
         uint256 amountFreeToken = getFreeTokenPerFloor(currentHouse);
         uint256 buyToken = _amountEth.div(houses[currentHouse].priceToken);
@@ -541,20 +314,21 @@ contract HouseStorage is Ownable, InvestorStorage {
         }
     }
 
-    function getFreeTokenPerFloor(uint256 _numberHouse) public returns(uint256 tokens) {
+    function getFreeTokenPerFloor(uint256 _numberHouse) public view returns(uint256 tokens) {
         return NUMBER_TOKENS_PER_FLOOR.sub(houses[_numberHouse].paymentTokenPerFloor);
     }
 
-    function getTotalEthPerHouse(uint256 _numberHouse) public returns(uint256 tokens) {
+    function getTotalEthPerHouse(uint256 _numberHouse) public view returns(uint256 tokens) {
         return houses[_numberHouse].totalEth;
     }
 
-    function getTotalTokenPerHouse(uint256 _numberHouse) public returns(uint256 tokens) {
+    function getTotalTokenPerHouse(uint256 _numberHouse) public view returns(uint256 tokens) {
         return houses[_numberHouse].paymentTokenTotal;
     }
 
     function getBuyToken(uint256 _amountEth) public returns(uint256 tokens, uint256 remainEth) {
         require(_amountEth > 0);
+        uint256 eths = 0;
         (tokens, eths) = checkBuyTokenPerFloor(_amountEth);
         uint256 freeEth = _amountEth.sub(eths);
         uint256 priceToken = houses[currentHouse].priceToken;
@@ -593,7 +367,7 @@ contract HouseStorage is Ownable, InvestorStorage {
 
     function saleToken(address _investor, uint256 _date) internal {
         require(_investor != address(0));
-        Investor inv = investors[_investor];
+        Investor storage inv = investors[_investor];
         uint256 refundEth = inv.amountToken.mul(averagePriceToken);
         uint256 countStep = currentHouse.sub(inv.numberHouse);
         uint256 amountWallet = 0;
@@ -639,14 +413,12 @@ contract HouseStorage is Ownable, InvestorStorage {
 
 }
 
-contract DreamCity is Ownable, InvestorStorage, MintableToken {
+contract DreamCity is Ownable, HouseStorage {
     using SafeMath for uint256;
 
     uint256 public totalEth = 0;
     uint256 public tokenAllocated = 0;
 
-
-    uint256 public currentPriceToken;
     uint256 simulateDate = 0;
 
     uint256 FIRST_PRICE_TOKEN = 0.05 ether;
@@ -668,16 +440,14 @@ contract DreamCity is Ownable, InvestorStorage, MintableToken {
         require(_owner != address(0));
         owner = _owner;
         //owner = msg.sender; // for test's
-        transfersEnabled = true;
-        mintingFinished = false;
-        currPriceToken = FIRST_PRICE_TOKEN;
+        averagePriceToken = FIRST_PRICE_TOKEN;
         currentHouse = 1;
         initHouse(1, FIRST_PRICE_TOKEN);
     }
 
     // fallback function can be used to buy tokens
     function() payable public {
-        if (msg.value >= currPriceToken) {
+        if (msg.value >= averagePriceToken) {
             buyTokens(msg.sender);
         } else if (msg.value == ETH_FOR_SALE_TOKEN) {
             saleTokens(msg.sender);
@@ -694,7 +464,9 @@ contract DreamCity is Ownable, InvestorStorage, MintableToken {
     function buyTokens(address _investor) public payable returns (uint256){
         require(_investor != address(0));
         uint256 weiAmount = msg.value;
-        uint256 tokens = getBuyToken(weiAmount);
+        uint256 tokens = 0;
+        uint256 remainEth = 0;
+        (tokens, remainEth) = getBuyToken(weiAmount);
         if (tokens == 0) {revert();}
 
         uint256 currentDate = getCurrentDate();
@@ -702,7 +474,6 @@ contract DreamCity is Ownable, InvestorStorage, MintableToken {
             totalEth = totalEth.add(weiAmount);
             tokenAllocated = tokenAllocated.add(tokens);
             setTimePayment(currentDate);
-            mint(_investor, tokens, owner);
 
             if (checkNewInvestor(_investor)) {
                 newInvestor(_investor, weiAmount, tokens, currentDate);
@@ -710,6 +481,7 @@ contract DreamCity is Ownable, InvestorStorage, MintableToken {
                 addFundToInvestor(_investor, weiAmount, tokens, currentDate);
             }
             emit TokenPurchase(_investor, weiAmount, tokens);
+            refundEth(_investor, remainEth);
             wallet.transfer(weiAmount);
         }
     }
@@ -719,30 +491,6 @@ contract DreamCity is Ownable, InvestorStorage, MintableToken {
         require(msg.value == ETH_FOR_SALE_TOKEN);
         uint256 currentDate = getCurrentDate();
         require(getSaleToken(_investor, currentDate));
-    }
-
-    function validPurchaseTokens(uint256 _weiAmount) public returns (uint256) {
-        uint256 addTokens = getTotalAmountOfTokens(_weiAmount);
-        if (tokenAllocated.add(addTokens) > balances[owner]) {
-            emit TokenLimitReached(msg.sender, tokenAllocated, addTokens);
-            return 0;
-        }
-
-        return addTokens;
-    }
-
-    function mintForFund(address _walletOwner) internal returns (bool result) {
-        result = false;
-        require(_walletOwner != address(0));
-        balances[_walletOwner] = balances[_walletOwner].add(fundForSale);
-        balances[addressFundTeam] = balances[addressFundTeam].add(fundTeam);
-        balances[addressFundBounty] = balances[addressFundBounty].add(fundBounty);
-        result = true;
-    }
-
-    function validSaleTokens(address _investor) public returns (uint256) {
-        uint256 saleTokens = 0;
-        return saleTokens;
     }
 
     function getCurrentDate() public view returns (uint256) {
