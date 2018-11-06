@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 
 library SafeMath {
@@ -195,7 +195,11 @@ contract HouseStorage is Ownable, InvestorStorage {
     // address where funds are collected
 
     uint256 public averagePriceToken = 0;
-    uint256 public currentPriceToken;
+
+    uint256 public totalEth = 0;
+    uint256 public tokenAllocated = 0;
+    uint8 public constant decimals = 18;
+
 
     uint256 public NUMBER_TOKENS_PER_FLOOR = 1000;
     uint256 public MAX_NUMBER_FLOOR_PER_HOUSE = 1000;
@@ -261,14 +265,21 @@ contract HouseStorage is Ownable, InvestorStorage {
     }
 
     function checkStopBuyTokens(uint256 _date) public returns(bool) {
-        uint256 timeLastPayment = arrayLastPayment[arrayLastPayment.length-1];
         require (_date > timeLastPayment);
-        uint8 countLastInvestorPerDay = 0;
+        uint256 timeLastPayment = 0;
+        uint256 countLastInvestorPerDay = 0;
+        if (arrayLastPayment.length > 0) {
+            timeLastPayment = arrayLastPayment[arrayLastPayment.length-1];
+        }
         if (stopBuyTokens == false) {
-            for (uint256 i = 0; i < arrayLastPayment.length-1; i++){
-                if ( _date - arrayLastPayment[i] < 1 days  ) {
-                    countLastInvestorPerDay++;
+            if (arrayLastPayment.length > 0) {
+                for (uint256 i = 0; i < arrayLastPayment.length-1; i++){
+                    if ( _date - arrayLastPayment[i] < 1 days  ) {
+                        countLastInvestorPerDay++;
+                    }
                 }
+            } else {
+                countLastInvestorPerDay = MIN_NUMBER_SALES_TOKENS;
             }
             if (countLastInvestorPerDay < MIN_NUMBER_SALES_TOKENS || houses[currentHouse].lastFloor >= MAX_NUMBER_FLOOR_PER_HOUSE) {
                 stopBuyTokens = true;
@@ -384,6 +395,7 @@ contract HouseStorage is Ownable, InvestorStorage {
             }
             houses[currentHouse].refundToken =  houses[currentHouse].refundToken.add(inv.amountToken);
             inv.amountToken = 0;
+            tokenAllocated = tokenAllocated.sub(inv.amountToken);
             inv.refundEth = inv.refundEth.add(refundEth.sub(amountWallet));
             inv.sellTime = _date;
 
@@ -415,9 +427,6 @@ contract HouseStorage is Ownable, InvestorStorage {
 
 contract DreamCity is Ownable, HouseStorage {
     using SafeMath for uint256;
-
-    uint256 public totalEth = 0;
-    uint256 public tokenAllocated = 0;
 
     uint256 simulateDate = 0;
 
