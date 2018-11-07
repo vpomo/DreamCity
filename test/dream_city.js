@@ -9,6 +9,7 @@ var decimal = 1e18;
 
 var buyEthOne = 0.6*decimal;
 var buyEthTwo = 1.2*decimal;
+var buyEthThree = 50*decimal
 
     it('should deployed contract', async ()  => {
         assert.equal(undefined, contract);
@@ -60,23 +61,27 @@ var buyEthTwo = 1.2*decimal;
         assert.equal(36, Number(houseInfo.paymentTokenPerFloor)); //paymentTokenPerFloor
         assert.equal(36, Number(houseInfo.paymentTokenTotal)); //paymentTokenTotal
         assert.equal(0.05, Number(houseInfo.priceToken/decimal)); //priceToken
-        for(var j =0; j < 10; j++){
-            await contract.buyTokens(accounts[j], {from:accounts[j], value: buyEthOne});
-        }
+        // for(var j =0; j < 10; j++){
+        //     await contract.buyTokens(accounts[j], {from:accounts[j], value: buyEthOne});
+        // }
 
-        await contract.setSimulateDate(1541154000); //Fri, 02 Nov 2018 10:20:00 GMT
-        for(var j =0; j < 10; j++){
-            await contract.buyTokens(accounts[j], {from:accounts[j], value: buyEthOne});
-        };
+        // await contract.setSimulateDate(1541154000); //Fri, 02 Nov 2018 10:20:00 GMT
+        // for(var j =0; j < 10; j++){
+        //     await contract.buyTokens(accounts[j], {from:accounts[j], value: buyEthOne});
+        // };
     });
 
 
-/*
+
     it('check next floor', async ()  => {
         await contract.setSimulateDate(1541240400); //Sat, 03 Nov 2018 10:20:00 GMT
-        for(var j =0; j < 10; j++){
-            await contract.buyTokens(accounts[j], {from:accounts[j], value: buyEthOne});
-        };
+        await contract.buyTokens(accounts[3], {from:accounts[3], value: buyEthThree});
+        var houseInfo = await contract.houseInfo.call(1);
+        console.log("houseInfo", JSON.stringify(houseInfo));
+        console.log("priceToken", Number(houseInfo.priceToken/decimal));
+        console.log("paymentTokenTotal", Number(houseInfo.paymentTokenTotal));
+        console.log("lastFloor", Number(houseInfo.lastFloor));
+
         // for(var j =0; j < 1; j++){
         //     for(var i = 0; i < 10; i++) {
         //         await contract.buyTokens(accounts[i], {from:accounts[i], value: buyEthOne});
@@ -84,7 +89,7 @@ var buyEthTwo = 1.2*decimal;
         // };
 
     });
-*/
+
 
 });
 

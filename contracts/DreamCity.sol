@@ -202,7 +202,7 @@ contract HouseStorage is Ownable, InvestorStorage {
 
 
 //    uint256 public NUMBER_TOKENS_PER_FLOOR = 1000;
-    uint256 public NUMBER_TOKENS_PER_FLOOR = 30; //for test's
+    uint256 public NUMBER_TOKENS_PER_FLOOR = 300; //for test's
 //    uint256 public MAX_NUMBER_FLOOR_PER_HOUSE = 1000;
     uint256 public MAX_NUMBER_FLOOR_PER_HOUSE = 3; //for test's
     uint256 public MIN_NUMBER_SALES_TOKENS = 6;
@@ -242,11 +242,12 @@ contract HouseStorage is Ownable, InvestorStorage {
 
     function houseInfo(uint256 _numberHouse) public view returns (
         uint256 paymentTokenPerFloor, uint256 paymentTokenTotal,
-        uint256 priceToken
+        uint256 priceToken, uint256 lastFloor
     ) {
         paymentTokenPerFloor = houses[_numberHouse].paymentTokenPerFloor;
         paymentTokenTotal = houses[_numberHouse].paymentTokenTotal;
         priceToken = houses[_numberHouse].priceToken;
+        lastFloor = houses[_numberHouse].lastFloor;
     }
 
     function setTimePayment(uint256 _date) public {
