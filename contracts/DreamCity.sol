@@ -1,4 +1,4 @@
-pragma solidity ^0.4.25;
+pragma solidity ^0.4.24;
 
 
 library SafeMath {
@@ -201,8 +201,10 @@ contract HouseStorage is Ownable, InvestorStorage {
     uint8 public constant decimals = 18;
 
 
-    uint256 public NUMBER_TOKENS_PER_FLOOR = 1000;
-    uint256 public MAX_NUMBER_FLOOR_PER_HOUSE = 1000;
+//    uint256 public NUMBER_TOKENS_PER_FLOOR = 1000;
+    uint256 public NUMBER_TOKENS_PER_FLOOR = 30; //for test's
+//    uint256 public MAX_NUMBER_FLOOR_PER_HOUSE = 1000;
+    uint256 public MAX_NUMBER_FLOOR_PER_HOUSE = 3; //for test's
     uint256 public MIN_NUMBER_SALES_TOKENS = 6;
     uint256 public TOKENS_COST_INCREASE_RATIO = 105;
     uint256 public PERCENT_TO_ADMINISTRATION = 8;
@@ -212,6 +214,8 @@ contract HouseStorage is Ownable, InvestorStorage {
     address public wallet;
 
     bool public stopBuyTokens = false;
+    uint256 startTime = 0;
+    uint256 public simulateDate = 0;
 
     uint256 public currentHouse;
 
@@ -265,25 +269,29 @@ contract HouseStorage is Ownable, InvestorStorage {
     }
 
     function checkStopBuyTokens(uint256 _date) public returns(bool) {
-        require (_date > timeLastPayment);
+        //require (_date > timeLastPayment);
         uint256 timeLastPayment = 0;
         uint256 countLastInvestorPerDay = 0;
-        if (arrayLastPayment.length > 0) {
+        bool firstDay = false;
+        if ((getCurrentDate() - startTime) < 1 days) {
+            firstDay = true;
+        }
+        if (!firstDay) {
             timeLastPayment = arrayLastPayment[arrayLastPayment.length-1];
         }
         if (stopBuyTokens == false) {
-            if (arrayLastPayment.length > 0) {
-                for (uint256 i = 0; i < arrayLastPayment.length-1; i++){
-                    if ( _date - arrayLastPayment[i] < 1 days  ) {
-                        countLastInvestorPerDay++;
+            if (!firstDay) {
+                if (arrayLastPayment.length > 0) {
+                    for (uint256 i = 0; i < arrayLastPayment.length-1; i++){
+                        if ( _date - arrayLastPayment[i] < 1 days  ) {
+                            countLastInvestorPerDay++;
+                        }
                     }
                 }
-            } else {
-                countLastInvestorPerDay = MIN_NUMBER_SALES_TOKENS;
-            }
-            if (countLastInvestorPerDay < MIN_NUMBER_SALES_TOKENS || houses[currentHouse].lastFloor >= MAX_NUMBER_FLOOR_PER_HOUSE) {
-                stopBuyTokens = true;
-                closeBuyTokens();
+                if (countLastInvestorPerDay < MIN_NUMBER_SALES_TOKENS || houses[currentHouse].lastFloor >= MAX_NUMBER_FLOOR_PER_HOUSE) {
+                    stopBuyTokens = true;
+                    closeBuyTokens();
+                }
             }
         } else {
             if (_date > timeLastPayment + 1 days) {
@@ -423,12 +431,26 @@ contract HouseStorage is Ownable, InvestorStorage {
         }
     }
 
+    function getCurrentDate() public view returns (uint256) {
+        if (simulateDate > 0) {
+            return simulateDate;
+        }
+        return now;
+    }
+
+    function setSimulateDate(uint256 _newDate) public onlyOwner {
+        require(_newDate >= 0);
+        simulateDate = _newDate;
+    }
+
+    function setStartDate(uint256 _newDate) public onlyOwner {
+        require(_newDate >= 0);
+        startTime = _newDate;
+    }
 }
 
 contract DreamCity is Ownable, HouseStorage {
     using SafeMath for uint256;
-
-    uint256 simulateDate = 0;
 
     uint256 FIRST_PRICE_TOKEN = 0.05 ether;
     uint256 ETH_FOR_SALE_TOKEN = 0.0001 ether;
@@ -448,7 +470,7 @@ contract DreamCity is Ownable, HouseStorage {
     {
         require(_owner != address(0));
         owner = _owner;
-        //owner = msg.sender; // for test's
+        owner = msg.sender; // for test's
         averagePriceToken = FIRST_PRICE_TOKEN;
         currentHouse = 1;
         initHouse(1, FIRST_PRICE_TOKEN);
@@ -470,10 +492,10 @@ contract DreamCity is Ownable, HouseStorage {
         _investor.transfer(_value);
     }
 
-    function buyTokens(address _investor) public payable returns (uint256){
+    function buyTokens(address _investor) public payable returns (uint256 tokens){
         require(_investor != address(0));
         uint256 weiAmount = msg.value;
-        uint256 tokens = 0;
+        tokens = 0;
         uint256 remainEth = 0;
         (tokens, remainEth) = getBuyToken(weiAmount);
         if (tokens == 0) {revert();}
@@ -501,18 +523,5 @@ contract DreamCity is Ownable, HouseStorage {
         uint256 currentDate = getCurrentDate();
         require(getSaleToken(_investor, currentDate));
     }
-
-    function getCurrentDate() public view returns (uint256) {
-        if (simulateDate > 0) {
-            return simulateDate;
-        }
-        return now;
-    }
-
-    function setSimulateDate(uint256 _newDate) public onlyOwner {
-        require(_newDate >= 0);
-        simulateDate = _newDate;
-    }
-
 }
 
