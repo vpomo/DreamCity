@@ -9,7 +9,7 @@ var decimal = 1e18;
 
 var buyEthOne = 0.6*decimal;
 var buyEthTwo = 1.2*decimal;
-var buyEthThree = 50*decimal
+var buyEthThree = 50*decimal;
 
     it('should deployed contract', async ()  => {
         assert.equal(undefined, contract);
@@ -75,12 +75,41 @@ var buyEthThree = 50*decimal
 
     it('check next floor', async ()  => {
         await contract.setSimulateDate(1541240400); //Sat, 03 Nov 2018 10:20:00 GMT
-        await contract.buyTokens(accounts[3], {from:accounts[3], value: buyEthThree});
         var houseInfo = await contract.houseInfo.call(1);
-        console.log("houseInfo", JSON.stringify(houseInfo));
-        console.log("priceToken", Number(houseInfo.priceToken/decimal));
-        console.log("paymentTokenTotal", Number(houseInfo.paymentTokenTotal));
-        console.log("lastFloor", Number(houseInfo.lastFloor));
+//        console.log("houseInfo", JSON.stringify(houseInfo));
+        console.log("houseInfo.paymentTokenPerFloor", Number(houseInfo.paymentTokenPerFloor));
+        console.log("houseInfo.paymentTokenTotal", Number(houseInfo.paymentTokenTotal));
+        console.log("houseInfo.priceToken", Number(houseInfo.priceToken/decimal));
+        console.log("houseInfo.lastFloor", Number(houseInfo.lastFloor));
+        console.log("houseInfo.totalEth", Number(houseInfo.totalEth));
+        // console.log("paymentTokenPerFloor", Number(houseInfo[0]));
+        // console.log("paymentTokenTotal", Number(houseInfo[1]));
+        // console.log("priceToken", Number(houseInfo[2]/decimal));
+        // console.log("lastFloor", Number(houseInfo[3]));
+
+        var check = await contract.checkBuyTokenPerFloor.call(buyEthThree, {from:accounts[4]});
+        //console.log("check", JSON.stringify(check));
+        console.log("checkBuyTokenPerFloor.tokens", Number(check.tokens));
+        console.log("checkBuyTokenPerFloor.needEth", Number(check.needEth/decimal));
+
+        check = await contract.getBuyToken.call(buyEthThree, {from:accounts[4]});
+        //console.log("check", JSON.stringify(check));
+        console.log("getBuyToken.tokens", Number(check.tokens));
+        console.log("getBuyToken.remainEth", Number(check.remainEth/decimal));
+
+        await contract.buyTokens(accounts[4], {from:accounts[4], value: buyEthThree});
+        var mainInfoInvestor = await contract.investorMainInfo.call(accounts[4]);
+        console.log("mainInfoInvestor", JSON.stringify(mainInfoInvestor));
+        console.log("investmentEth", mainInfoInvestor.investmentEth/decimal); //investmentEth
+        console.log("amountToken", Number(mainInfoInvestor.amountToken)); //amountToken
+
+        houseInfo = await contract.houseInfo.call(1);
+//        console.log("houseInfo", JSON.stringify(houseInfo));
+        console.log("houseInfo.paymentTokenPerFloor", Number(houseInfo.paymentTokenPerFloor));
+        console.log("houseInfo.paymentTokenTotal", Number(houseInfo.paymentTokenTotal));
+        console.log("houseInfo.priceToken", Number(houseInfo.priceToken/decimal));
+        console.log("houseInfo.lastFloor", Number(houseInfo.lastFloor));
+        console.log("houseInfo.totalEth", Number(houseInfo.totalEth));
 
         // for(var j =0; j < 1; j++){
         //     for(var i = 0; i < 10; i++) {

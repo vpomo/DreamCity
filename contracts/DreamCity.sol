@@ -232,6 +232,9 @@ contract HouseStorage is Ownable, InvestorStorage {
 
     mapping (uint256 => House) private houses;
 
+    event NextFloor(uint256 date, uint256 numberFloor);
+
+
     constructor() public {
     }
 
@@ -242,12 +245,13 @@ contract HouseStorage is Ownable, InvestorStorage {
 
     function houseInfo(uint256 _numberHouse) public view returns (
         uint256 paymentTokenPerFloor, uint256 paymentTokenTotal,
-        uint256 priceToken, uint256 lastFloor
+        uint256 priceToken, uint256 lastFloor, uint256 totalEth
     ) {
         paymentTokenPerFloor = houses[_numberHouse].paymentTokenPerFloor;
         paymentTokenTotal = houses[_numberHouse].paymentTokenTotal;
         priceToken = houses[_numberHouse].priceToken;
         lastFloor = houses[_numberHouse].lastFloor;
+        totalEth = houses[_numberHouse].totalEth;
     }
 
     function setTimePayment(uint256 _date) public {
@@ -357,21 +361,28 @@ contract HouseStorage is Ownable, InvestorStorage {
 
         while (freeEth > 0) {
             if (nextFloor()) {
-                priceToken = priceToken.mul(TOKENS_COST_INCREASE_RATIO).div(100);
+                priceToken = houses[currentHouse].priceToken;
                 addBuyToken = freeEth.div(priceToken);
                 if (addBuyToken > NUMBER_TOKENS_PER_FLOOR) {
-                    tokens = tokens.add(NUMBER_TOKENS_PER_FLOOR);
-                    eths = eths.add(NUMBER_TOKENS_PER_FLOOR.mul(priceToken));
-                    freeEth = freeEth.sub(eths);
+                    if (!nextFloor()) {
+                        remainEth = freeEth;
+                        freeEth = 0;
+                    } else {
+                        eths = eths.add(NUMBER_TOKENS_PER_FLOOR.mul(priceToken));
+                        freeEth = freeEth.sub(eths);
+                        tokens = tokens.add(NUMBER_TOKENS_PER_FLOOR);
+                        writePurchaise(priceToken, eths, tokens);
+                    }
                 } else {
                     tokens = tokens.add(addBuyToken);
                     eths = eths.add(freeEth);
                     freeEth = 0;
                     remainEth = 0;
+                    writePurchaise(priceToken, eths, tokens);
                 }
-                writePurchaise(priceToken, eths, tokens);
             } else {
                 remainEth = freeEth;
+                freeEth = 0;
             }
         }
     }
@@ -417,15 +428,17 @@ contract HouseStorage is Ownable, InvestorStorage {
         require(_amountEth > 0);
         require(_amountToken > 0);
 
-        houses[currentHouse].priceToken = _priceToken;
         houses[currentHouse].totalEth = houses[currentHouse].totalEth.add(_amountEth);
         houses[currentHouse].paymentTokenPerFloor = houses[currentHouse].paymentTokenPerFloor.add(_amountToken);
         houses[currentHouse].paymentTokenTotal = houses[currentHouse].paymentTokenTotal.add(_amountToken);
     }
 
     function nextFloor() public returns (bool result){
-        houses[currentHouse].lastFloor = houses[currentHouse].lastFloor.add(1);
-        if (houses[currentHouse].lastFloor < MAX_NUMBER_FLOOR_PER_HOUSE) {
+        if (houses[currentHouse].lastFloor.add(1) < MAX_NUMBER_FLOOR_PER_HOUSE) {
+            houses[currentHouse].lastFloor = houses[currentHouse].lastFloor.add(1);
+            houses[currentHouse].paymentTokenPerFloor = 0;
+            houses[currentHouse].priceToken = houses[currentHouse].priceToken.mul(TOKENS_COST_INCREASE_RATIO).div(100);
+            emit NextFloor(getCurrentDate(), houses[currentHouse].lastFloor);
             result = true;
         } else {
             result = false;
