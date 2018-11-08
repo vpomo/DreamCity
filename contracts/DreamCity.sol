@@ -350,10 +350,12 @@ contract HouseStorage is Ownable, InvestorStorage {
         return houses[_numberHouse].paymentTokenTotal;
     }
 
-    function getBuyToken(uint256 _amountEth) public returns(uint256 tokens, uint256 remainEth) {
+    function getBuyToken(uint256 _amountEth) public returns(uint256 totalTokens, uint256 remainEth) {
         require(_amountEth > 0);
         uint256 eths = 0;
+        uint256 tokens = 0;
         (tokens, eths) = checkBuyTokenPerFloor(_amountEth);
+        totalTokens = totalTokens.add(tokens);
         uint256 freeEth = _amountEth.sub(eths);
         uint256 priceToken = houses[currentHouse].priceToken;
         uint256 addBuyToken = 0;
@@ -364,21 +366,16 @@ contract HouseStorage is Ownable, InvestorStorage {
                 priceToken = houses[currentHouse].priceToken;
                 addBuyToken = freeEth.div(priceToken);
                 if (addBuyToken > NUMBER_TOKENS_PER_FLOOR) {
-                    if (!nextFloor()) {
-                        remainEth = freeEth;
-                        freeEth = 0;
-                    } else {
-                        eths = eths.add(NUMBER_TOKENS_PER_FLOOR.mul(priceToken));
-                        freeEth = freeEth.sub(eths);
-                        tokens = tokens.add(NUMBER_TOKENS_PER_FLOOR);
-                        writePurchaise(priceToken, eths, tokens);
-                    }
+                    totalTokens = totalTokens.add(NUMBER_TOKENS_PER_FLOOR);
+
+                    writePurchaise(priceToken, NUMBER_TOKENS_PER_FLOOR.mul(priceToken), NUMBER_TOKENS_PER_FLOOR);
+                    freeEth = freeEth.sub(NUMBER_TOKENS_PER_FLOOR.mul(priceToken));
                 } else {
-                    tokens = tokens.add(addBuyToken);
                     eths = eths.add(freeEth);
+                    remainEth = freeEth.sub(eths);
                     freeEth = 0;
-                    remainEth = 0;
-                    writePurchaise(priceToken, eths, tokens);
+                    totalTokens = totalTokens.add(addBuyToken);
+                    writePurchaise(priceToken, eths, addBuyToken);
                 }
             } else {
                 remainEth = freeEth;

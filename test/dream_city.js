@@ -94,7 +94,7 @@ var buyEthThree = 50*decimal;
 
         check = await contract.getBuyToken.call(buyEthThree, {from:accounts[4]});
         //console.log("check", JSON.stringify(check));
-        console.log("getBuyToken.tokens", Number(check.tokens));
+        console.log("getBuyToken.totalTokens", Number(check.totalTokens));
         console.log("getBuyToken.remainEth", Number(check.remainEth/decimal));
 
         await contract.buyTokens(accounts[4], {from:accounts[4], value: buyEthThree});
