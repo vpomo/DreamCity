@@ -144,10 +144,26 @@ var saleEthOne = 0.0001*decimal;
 
     it('check sale token', async ()  => {
         await contract.setSimulateDate(1541152800); //Fri, 02 Nov 2018 10:00:00 GMT
+        stopBuyToken = await contract.checkStopBuyTokens.call(1541066490, {from:accounts[1]});
+        assert.equal(true, stopBuyToken);
 
         await contract.buyTokens(accounts[1], {from:accounts[1], value: saleEthOne});
-        var mainInfoInvestor = await contract.investorMainInfo.call(accounts[6]);
-    });
+        //await contract.saleTokens(accounts[1], {from:accounts[1], value: saleEthOne});
+        var mainInfoInvestor = await contract.investorMainInfo.call(accounts[1]);
+        // console.log("refundEth", mainInfoInvestor.refundEth/decimal); //refundEth
+        // console.log("amountToken", Number(mainInfoInvestor.amountToken)); //amountToken
+        assert.equal(0, Number(mainInfoInvestor.amountToken));
+        assert.equal(0.510705, mainInfoInvestor.refundEth/decimal);
+
+        var houseInfo = await contract.houseInfo.call(1);
+        // console.log("houseInfo.refundEth", Number(houseInfo.refundEth/decimal));
+        assert.equal(0.56745, Number(houseInfo.refundEth/decimal));
+
+        await contract.buyTokens(accounts[2], {from:accounts[2], value: buyEthOne});
+        mainInfoInvestor = await contract.investorMainInfo.call(accounts[2]);
+        assert.equal(24, Number(mainInfoInvestor.amountToken)); //amountToken
+
+});
 
 /*
     it('check start buy token for (day + 1) after stop buy token', async ()  => {
