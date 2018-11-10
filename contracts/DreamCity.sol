@@ -196,7 +196,7 @@ contract HouseStorage is Ownable, InvestorStorage {
 
     uint256 public averagePriceToken = 0;
 
-    uint256 public totalEth = 0;
+    uint256 public totalEthRaised = 0;
     uint256 public tokenAllocated = 0;
     uint8 public constant decimals = 18;
 
@@ -213,9 +213,9 @@ contract HouseStorage is Ownable, InvestorStorage {
     address public administrationWallet;
     address public wallet;
 
-    bool public stopBuyTokens = false;
-    uint256 startTime = 0;
-    uint256 public simulateDate = 0;
+    bool public stopBuyTokens;
+    uint256 startTime;
+    uint256 public simulateDate;
 
     uint256 public currentHouse;
 
@@ -233,9 +233,13 @@ contract HouseStorage is Ownable, InvestorStorage {
     mapping (uint256 => House) private houses;
 
     event NextFloor(uint256 date, uint256 numberFloor);
-
+    event TokenPurchase(uint256 priceToken, uint256 amountEth, uint256 amountToken);
+    event StopBuyTokens(uint256 date);
 
     constructor() public {
+        stopBuyTokens = false;
+        startTime = 0;
+        simulateDate = 0;
     }
 
     function initHouse(uint256 _numberHouse, uint256 _priceToken) public {
@@ -274,8 +278,7 @@ contract HouseStorage is Ownable, InvestorStorage {
     }
 
     function checkStopBuyTokens(uint256 _date) public returns(bool) {
-        //require (_date > timeLastPayment);
-        uint256 timeLastPayment = 0;
+        uint256 timeLastPayment = startTime;
         uint256 countLastInvestorPerDay = 0;
         bool firstDay = false;
         if ((getCurrentDate() - startTime) < 1 days) {
@@ -293,10 +296,8 @@ contract HouseStorage is Ownable, InvestorStorage {
                         }
                     }
                 }
-                if (countLastInvestorPerDay < MIN_NUMBER_SALES_TOKENS || houses[currentHouse].lastFloor >= MAX_NUMBER_FLOOR_PER_HOUSE) {
-                    stopBuyTokens = true;
-                    closeBuyTokens();
-                }
+                if (countLastInvestorPerDay < MIN_NUMBER_SALES_TOKENS || houses[currentHouse].lastFloor.add(1) >= MAX_NUMBER_FLOOR_PER_HOUSE) {
+                    makeStopBuyTokens(_date);                }
             }
         } else {
             if (_date > timeLastPayment + 1 days) {
@@ -307,6 +308,13 @@ contract HouseStorage is Ownable, InvestorStorage {
         }
         return stopBuyTokens;
     }
+
+    function makeStopBuyTokens(uint256 _date) internal {
+        stopBuyTokens = true;
+        closeBuyTokens();
+        emit StopBuyTokens(_date);
+    }
+
 
     function closeBuyTokens() public returns(bool) {
         uint256 currentRaisedEth = getTotalEthPerHouse(currentHouse);
@@ -350,7 +358,8 @@ contract HouseStorage is Ownable, InvestorStorage {
         return houses[_numberHouse].paymentTokenTotal;
     }
 
-    function getBuyToken(uint256 _amountEth) public returns(uint256 totalTokens, uint256 remainEth) {
+    function getBuyToken(uint256 _amountEth) public returns(uint256 totalTokens, uint256 remainEth, bool lastFloorPerHouse) {
+        lastFloorPerHouse = false;
         require(_amountEth > 0);
         uint256 eths = 0;
         uint256 tokens = 0;
@@ -359,7 +368,22 @@ contract HouseStorage is Ownable, InvestorStorage {
         uint256 freeEth = _amountEth.sub(eths);
         uint256 priceToken = houses[currentHouse].priceToken;
         uint256 addBuyToken = 0;
-        writePurchaise(priceToken, eths, tokens);
+        if (tokens > 0) {
+            writePurchaise(priceToken, eths, tokens);
+        } else {
+            if (nextFloor()) {
+                (tokens, eths) = checkBuyTokenPerFloor(_amountEth);
+                totalTokens = totalTokens.add(tokens);
+                freeEth = _amountEth.sub(eths);
+                priceToken = houses[currentHouse].priceToken;
+            } else {
+                remainEth = _amountEth;
+                lastFloorPerHouse = true;
+                freeEth = 0;
+                stopBuyTokens = true;
+                closeBuyTokens();
+            }
+        }
 
         while (freeEth > 0) {
             if (nextFloor()) {
@@ -428,6 +452,7 @@ contract HouseStorage is Ownable, InvestorStorage {
         houses[currentHouse].totalEth = houses[currentHouse].totalEth.add(_amountEth);
         houses[currentHouse].paymentTokenPerFloor = houses[currentHouse].paymentTokenPerFloor.add(_amountToken);
         houses[currentHouse].paymentTokenTotal = houses[currentHouse].paymentTokenTotal.add(_amountToken);
+        emit TokenPurchase(_priceToken, _amountEth, _amountToken);
     }
 
     function nextFloor() public returns (bool result){
@@ -467,7 +492,7 @@ contract DreamCity is Ownable, HouseStorage {
     uint256 ETH_FOR_SALE_TOKEN = 0.0001 ether;
 
 
-    event TokenPurchase(address indexed beneficiary, uint256 value, uint256 amount);
+    event TotalTokenPurchase(address indexed beneficiary, uint256 value, uint256 amount);
     event TokenLimitReached(address indexed sender, uint256 tokenRaised, uint256 purchasedToken);
     event CurrentPeriod(uint period);
     event ChangeTime(address indexed owner, uint256 newValue, uint256 oldValue);
@@ -508,22 +533,30 @@ contract DreamCity is Ownable, HouseStorage {
         uint256 weiAmount = msg.value;
         tokens = 0;
         uint256 remainEth = 0;
-        (tokens, remainEth) = getBuyToken(weiAmount);
-        if (tokens == 0) {revert();}
+        bool lastFloorPerHouse = false;
 
         uint256 currentDate = getCurrentDate();
         if (!checkStopBuyTokens(currentDate)) {
-            totalEth = totalEth.add(weiAmount);
+            (tokens, remainEth, lastFloorPerHouse) = getBuyToken(weiAmount);
+            if (tokens == 0) {
+                if (lastFloorPerHouse) {
+                    //refundEth(_investor, remainEth);
+                } else {
+                    revert();
+                }
+            }
+
+            totalEthRaised = totalEthRaised.add(weiAmount);
             tokenAllocated = tokenAllocated.add(tokens);
             setTimePayment(currentDate);
 
             if (checkNewInvestor(_investor)) {
-                newInvestor(_investor, weiAmount, tokens, currentDate);
+                newInvestor(_investor, weiAmount.sub(remainEth), tokens, currentDate);
             } else {
-                addFundToInvestor(_investor, weiAmount, tokens, currentDate);
+                addFundToInvestor(_investor, weiAmount.sub(remainEth), tokens, currentDate);
             }
-            emit TokenPurchase(_investor, weiAmount, tokens);
-            refundEth(_investor, remainEth);
+            emit TotalTokenPurchase(_investor, weiAmount.sub(remainEth), tokens);
+//            refundEth(_investor, remainEth);
             wallet.transfer(weiAmount);
         }
     }
