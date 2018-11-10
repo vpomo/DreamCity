@@ -163,11 +163,16 @@ var saleEthOne = 0.0001*decimal;
         mainInfoInvestor = await contract.investorMainInfo.call(accounts[2]);
         assert.equal(24, Number(mainInfoInvestor.amountToken)); //amountToken
 
-});
+    });
 
-/*
+
     it('check start buy token for (day + 1) after stop buy token', async ()  => {
         await contract.setSimulateDate(1541240400); //Sat, 03 Nov 2018 10:20:00 GMT
+        await contract.buyTokens(accounts[6], {from:accounts[6], value: buyEthOne});
+        var freeEth = await contract.getFreeEth.call(12, buyEthOne, 0.0472875*decimal);
+        console.log("freeEth", Number(freeEth));
+
+/*
         await contract.buyTokens(accounts[6], {from:accounts[6], value: buyEthOne});
         var mainInfoInvestor = await contract.investorMainInfo.call(accounts[6]);
         //console.log("mainInfoInvestor", JSON.stringify(mainInfoInvestor));
@@ -182,9 +187,10 @@ var saleEthOne = 0.0001*decimal;
         console.log("houseInfo.priceToken", Number(houseInfo.priceToken/decimal));
         console.log("houseInfo.lastFloor", Number(houseInfo.lastFloor));
         console.log("houseInfo.totalEth", Number(houseInfo.totalEth));
+*/
 
     });
-*/
+
 
 });
 

@@ -421,6 +421,11 @@ contract HouseStorage is Ownable, InvestorStorage {
         }
     }
 
+    function getFreeEth(uint256 _amountToken, uint256 _amountEth, uint256 _priceToken) public returns(uint256 result) {
+        uint256 realEth = _amountToken.mul(_priceToken);
+        result = _amountEth.sub(realEth);
+    }
+
     function getSaleToken(address _investor, uint256 _date) public returns(bool result) {
         require(_investor != address(0));
         result = false;
@@ -557,8 +562,9 @@ contract DreamCity is Ownable, HouseStorage {
         if (!checkStopBuyTokens(currentDate)) {
             (tokens, remainEth, lastFloorPerHouse) = getBuyToken(weiAmount);
             if (tokens == 0) {
-                if (lastFloorPerHouse) {
+                if (!lastFloorPerHouse) {
                     //refundEth(_investor, remainEth); // for test's
+                    return 0;
                 } else {
                     revert();
                 }
