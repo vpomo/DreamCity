@@ -374,22 +374,26 @@ contract HouseStorage is Ownable, InvestorStorage {
     function getBuyToken(uint256 _amountEth) public returns(uint256 totalTokens, uint256 remainEth, bool lastFloorPerHouse) {
         lastFloorPerHouse = false;
         require(_amountEth > 0);
+        uint256 diffEth = 0;
         uint256 eths = 0;
         uint256 tokens = 0;
+        uint256 priceToken = houses[currentHouse].priceToken;
         (tokens, eths) = checkBuyTokenPerFloor(_amountEth);
         totalTokens = totalTokens.add(tokens);
+
+        diffEth = getDifferentEth(tokens, eths, priceToken);
+        eths = eths.sub(diffEth);
         uint256 freeEth = _amountEth.sub(eths);
-        uint256 priceToken = houses[currentHouse].priceToken;
         uint256 addBuyToken = 0;
+        bool lastFloor = houses[currentHouse].lastFloor.add(1) >= MAX_NUMBER_FLOOR_PER_HOUSE;
         if (tokens > 0) {
             writePurchaise(eths, tokens);
+            if (freeEth < priceToken) {
+                remainEth = freeEth;
+                freeEth = 0;
+            }
         } else {
-            if (nextFloor()) {
-                (tokens, eths) = checkBuyTokenPerFloor(_amountEth);
-                totalTokens = totalTokens.add(tokens);
-                freeEth = _amountEth.sub(eths);
-                priceToken = houses[currentHouse].priceToken;
-            } else {
+            if (lastFloor) {
                 remainEth = _amountEth;
                 lastFloorPerHouse = true;
                 freeEth = 0;
@@ -408,8 +412,9 @@ contract HouseStorage is Ownable, InvestorStorage {
                     writePurchaise(NUMBER_TOKENS_PER_FLOOR.mul(priceToken), NUMBER_TOKENS_PER_FLOOR);
                     freeEth = freeEth.sub(NUMBER_TOKENS_PER_FLOOR.mul(priceToken));
                 } else {
-                    eths = eths.add(freeEth);
-                    remainEth = freeEth.sub(eths);
+                    diffEth = getDifferentEth(addBuyToken, freeEth, priceToken);
+                    eths = freeEth.sub(diffEth);
+                    remainEth = diffEth;
                     freeEth = 0;
                     totalTokens = totalTokens.add(addBuyToken);
                     writePurchaise(eths, addBuyToken);
@@ -421,9 +426,13 @@ contract HouseStorage is Ownable, InvestorStorage {
         }
     }
 
-    function getFreeEth(uint256 _amountToken, uint256 _amountEth, uint256 _priceToken) public returns(uint256 result) {
+    function getDifferentEth(uint256 _amountToken, uint256 _amountEth, uint256 _priceToken) public pure returns(uint256 result) {
         uint256 realEth = _amountToken.mul(_priceToken);
-        result = _amountEth.sub(realEth);
+        if (realEth <= _amountEth) {
+            result = _amountEth.sub(realEth);
+        } else {
+            result = 0;
+        }
     }
 
     function getSaleToken(address _investor, uint256 _date) public returns(bool result) {
@@ -465,8 +474,8 @@ contract HouseStorage is Ownable, InvestorStorage {
     }
 
     function writePurchaise(uint256 _amountEth, uint256 _amountToken) public {
-        require(_amountEth > 0);
-        require(_amountToken > 0);
+        //require(_amountEth > 0);
+        //require(_amountToken > 0);
 
         houses[currentHouse].totalEth = houses[currentHouse].totalEth.add(_amountEth);
         houses[currentHouse].paymentTokenPerFloor = houses[currentHouse].paymentTokenPerFloor.add(_amountToken);
