@@ -129,9 +129,6 @@ it('check next floor', async ()  => {
         assert.equal(47.2875, Number(houseInfo.totalEth/decimal));
         //console.log("houseInfo.totalEth", Number(houseInfo.totalEth/decimal));
 
-var test = await contract.test.call();
-console.log("test1", Number(test));
-
     });
 
     it('check stop buy tokens last floor', async ()  => {
@@ -212,6 +209,7 @@ console.log("test1", Number(test));
         assert.equal(0.56745, Number(houseInfo.totalEth/decimal));
 
         await contract.buyTokens(accounts[7], {from:accounts[7], value: buyEthOne});
+        await contract.buyTokens(accounts[8], {from:accounts[8], value: buyEthTwo});
 
 var test = await contract.test.call();
 console.log("test3", Number(test));
@@ -221,6 +219,17 @@ console.log("lastTimePaid", Number(lastTimePaid));
 
 var amountTokenLastDay = await contract.getAmountTokenLastDay.call();
 console.log("amountTokenLastDay", Number(amountTokenLastDay));
+
+var houseInfo = await contract.houseInfo.call(2);
+console.log("paymentTokenPerFloor", Number(houseInfo[0]));
+console.log("paymentTokenTotal", Number(houseInfo[1]));
+console.log("priceToken", Number(houseInfo[2]/decimal));
+
+var test = await contract.test.call();
+console.log("test3", Number(test));
+
+var lastTimePaid = await contract.getTimeLastInvestor.call();
+console.log("lastTimePaid", Number(lastTimePaid));
 
 var member = await contract.getMemberArrayPaidTokenLastDay.call(0);
 console.log("member.investor", member.investor);
@@ -232,11 +241,22 @@ console.log("member.investor", member.investor);
 console.log("member.amountToken", Number(member.amountToken));
 console.log("member.paymentTime", Number(member.paymentTime));
 
+member = await contract.getMemberArrayPaidTokenLastDay.call(2);
+console.log("member.investor", member.investor);
+console.log("member.amountToken", Number(member.amountToken));
+console.log("member.paymentTime", Number(member.paymentTime));
+
     });
 
     it('check amount token last day', async ()  => {
-        // var amountTokenLastDay = await contract.getAmountTokenLastDay.call();
-        // console.log("amountTokenLastDay", Number(amountTokenLastDay));
+        var totalEthPerHouse = await contract.totalEthPerHouse.call();
+        console.log("totalEthPerHouse", Number(totalEthPerHouse/decimal));
+
+        var testEthTransferLastInvestors = await contract.testEthTransferLastInvestors.call(0);
+        console.log("testEthTransferLastInvestors", Number(testEthTransferLastInvestors));
+
+        var totalPrize = await contract.totalPrize.call();
+        console.log("totalPrize", Number(totalPrize/decimal));
 
     });
 

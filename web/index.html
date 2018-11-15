@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>DreamCity</title>
+    <script src="js/jquery-3.3.1.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
+
+    <style>
+        ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: url(images/image_1.jpg);
+            -moz-background-size: 100%; /* Firefox 3.6+ */
+            -webkit-background-size: 100%; /* Safari 3.1+ и Chrome 4.0+ */
+            -o-background-size: 100%; /* Opera 9.6+ */
+            background-size: 100%;
+        }
+        .footer {
+            flex: 0 0 auto;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <br><br>
+    <div class="card">
+        <div class="card-body">
+            <h3 class="text-xs-center">
+                DreamCity
+            </h3>
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-lg-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Личные данные</h5>
+                            <p class="card-text"></p>
+                            Адрес вашего кошелька:
+                            <strong id="walletAddress"></strong>
+                            <p></p>
+                            Число купленных токенов:
+                            <strong id="walletTokens"></strong>
+                            <p></p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <p></p> <p></p>
+            <div class="row">
+                <div class="col-md-6 col-sm-6 col-lg-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Общие данные</h5>
+                            <p class="card-text"></p>
+                                Цена токена on-line:
+                                <strong id="priceToken"></strong>
+                            <p></p>
+                                Следующая цена токена в текущем доме:
+                                <strong id="priceTokenNext"></strong>
+                            <p></p>
+                                Количество проданных токенов в текущем доме:
+                                <strong id="paymentTokenTotal"></strong>
+                            <p></p>
+                                Количество полученного эфира в текущем доме:
+                                <strong id="totalEth"></strong>
+                            <p></p>
+                                Номер текущего этажа:
+                                <strong id="lastFloor"></strong>
+                            <p></p>
+
+                                Количество оставшихся токенов на этаже:
+                                <strong id="freeTokenPerFloor"></strong>
+                            <p></p>
+                                Количество оставшихся токенов на следующем этаже:
+                                <strong id="freeTokenNextFloor"></strong>
+                            <p></p>
+
+                                Количество проданных токенов за последние 24 часа:
+                                <strong id="amountTokenLastDay"></strong>
+                            <p></p>
+
+                                Количество проданных токенов за последние 24 часа, если инвесторов меньше 10:
+                                <strong id="amountTokenLastDayIfLessTen"></strong>
+                            <p></p>
+
+                           <p></p>
+                            <button class="btn btn-primary btn-sm" id="buyMyTokens" onclick="buyMyTokens();">Buy token</button>
+                            <p></p>
+                        </div>
+                    </div>
+                </div>
+				<div class="col-md-6 col-sm-6 col-lg-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Общие данные продолжение</h5>
+                            <p class="card-text"></p>
+                                Дата начала строительства текущего дома:
+                                <strong id="startTimeBuild"></strong>
+                            <p></p>
+                                Дата окончания строительства текущего дома:
+                                <strong id="stopTimeBuild"></strong>
+                            <p></p>
+                                Дата начала строительства следующего дома:
+                                <strong id="startTimeBuildNext"></strong>
+                            <p></p>
+
+                                Цена токена в начале строительства следующего дома:
+                                <strong id="priceTokenNextHouse"></strong>
+                            <p></p>
+
+                                Общее количество уже построенных домов:
+                                <strong id="numberAllHouse"></strong>
+                            <p></p>
+
+                                Общее количество проданных токенов:
+                                <strong id="totalTokenRaised"></strong>
+                            <p></p>
+
+                                Общее количество полученного эфира:
+                                <strong id="totalEthRaised"></strong>
+                            <p></p>
+
+                                Общее количество построенных этажей:
+                                <strong id="totalFloorBuilded"></strong>
+                            <p></p>
+
+                                Общее количество выданных призовых:
+                                <strong id="totalPrize"></strong>
+                            <p></p>
+
+                                <span> &nbsp;&nbsp; </span>
+                            <p></p>
+                            <button class="btn btn-primary btn-sm" id="claimTokens" onclick="claimTokens();">Claim token</button>
+                            <p></p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+<p></p>
+
+        </div>
+    </div>
+</div>
+<footer >
+    <div class="navbar-fixed-bottom row-fluid">
+        <div class="navbar-inner">
+            <div class="container">
+                <div class="footer-copyright py-3 text-center">
+                    © 2018 Copyright
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+<input id="abiContract" name="abiContract" value="" type="hidden">
+
+<script src="metaScript.js" type="text/javascript" charset="utf-8"></script>
+
+</body>
+</html>

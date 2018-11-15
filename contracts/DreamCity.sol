@@ -91,6 +91,7 @@ contract InvestorStorage is Ownable {
 
     uint256 public startTime;
     uint256 public simulateDate;
+    uint256 public totalEthPerHouse;
 
     struct Investor {
         uint256 investmentEth;
@@ -168,6 +169,7 @@ contract InvestorStorage is Ownable {
         inv.paymentTime = _paymentTime;
         inv.numberHouse = _currentHouse;
         setPaidLastInvestorPerDay(_investor, _amountToken, _paymentTime);
+        totalEthPerHouse = totalEthPerHouse.add(_investment);
         emit TokenPurchaise(_investor, _paymentTime, _investment, _amountToken);
     }
 
@@ -189,16 +191,16 @@ contract InvestorStorage is Ownable {
 
     function fixArrayPaidTokenLastDay() internal returns (uint256 countElem) {
         countElem = 0;
+        uint256 currentDay = getCurrentDate();
         uint256 lengthArray = arrayPaidTokenLastDay.length;
         if (lengthArray > 0) {
             while (countElem < lengthArray) {
-                if (getCurrentDate().sub(arrayPaidTokenLastDay[0].paymentTime) > 1 days) {
+                if (currentDay.sub(arrayPaidTokenLastDay[0].paymentTime) > 1 days) {
                     for (uint i = 0; i<arrayPaidTokenLastDay.length-1; i++){
                         arrayPaidTokenLastDay[i] = arrayPaidTokenLastDay[i+1];
                     }
                     delete arrayPaidTokenLastDay[arrayPaidTokenLastDay.length-1];
                     arrayPaidTokenLastDay.length--;
-                    lengthArray--;
                 }
                 countElem++;
             }
@@ -218,19 +220,6 @@ contract InvestorStorage is Ownable {
         paymentTime = arrayPaidTokenLastDay[index].paymentTime;
     }
 
-
-
-    function removeElemPaidLastInvestorPerDay(uint index) internal returns(PaidTokenLastDay[]) {
-        if (index >= arrayPaidTokenLastDay.length) return;
-
-        for (uint i = index; i<arrayPaidTokenLastDay.length-1; i++){
-            arrayPaidTokenLastDay[i] = arrayPaidTokenLastDay[i+1];
-        }
-        delete arrayPaidTokenLastDay[arrayPaidTokenLastDay.length-1];
-        arrayPaidTokenLastDay.length--;
-        return arrayPaidTokenLastDay;
-    }
-
     function getTimeLastInvestor() public view returns (uint256 lastTimePaid) {
         lastTimePaid = 0;
         if (arrayPaidTokenLastDay.length > 0) {
@@ -240,8 +229,9 @@ contract InvestorStorage is Ownable {
 
     function getAmountTokenLastDay() public view returns (uint256 amountTokenLastDay) {
         amountTokenLastDay = 0;
-        for (uint i = 0; i < arrayPaidTokenLastDay.length-1; i++){
-            if (getCurrentDate().sub(arrayPaidTokenLastDay[i].paymentTime) <= 1 days ) {
+        uint256 currentDay = getCurrentDate();
+        for (uint i = 0; i < arrayPaidTokenLastDay.length; i++){
+            if (currentDay.sub(arrayPaidTokenLastDay[i].paymentTime) <= 1 days ) {
                 amountTokenLastDay = amountTokenLastDay.add(arrayPaidTokenLastDay[i].amountToken);
             }
         }
@@ -252,8 +242,9 @@ contract InvestorStorage is Ownable {
             return 0;
         }
         amountTokenLastDayIfLessTen = 0;
+        uint256 currentDay = getCurrentDate();
         for (uint i = 0; i < arrayPaidTokenLastDay.length-1; i++){
-            if (getCurrentDate().sub(arrayPaidTokenLastDay[i].paymentTime) <= 1 days ) {
+            if (currentDay.sub(arrayPaidTokenLastDay[i].paymentTime) <= 1 days ) {
                 amountTokenLastDayIfLessTen = amountTokenLastDayIfLessTen.add(arrayPaidTokenLastDay[i].amountToken);
             }
         }
@@ -264,25 +255,27 @@ contract InvestorStorage is Ownable {
         uint256 valueLastTenInvestor = _value.mul(PERCENT_TO_LAST_TEN_INVESTOR).div(1000);
         uint256 valueLastInvestor = _value.mul(PERCENT_TO_LAST_INVESTOR).div(100);
         address currInvestor = address(0);
+        uint lastNumberInvestor = arrayPaidTokenLastDay.length;
 
-        if (address(this).balance > valueLastTenInvestor.mul(10) + valueLastInvestor){
+        if (address(this).balance > valueLastTenInvestor.mul(10).add(valueLastInvestor)){
             uint step = 0;
-            uint lastNumberInvestor = arrayPaidTokenLastDay.length - 1;
-            while (step < 10) {
+            while (step < 11) {
                 if (lastNumberInvestor > 0) {
-                    currInvestor = arrayPaidTokenLastDay[lastNumberInvestor].investor;
+                    currInvestor = arrayPaidTokenLastDay[lastNumberInvestor-1].investor;
                     if (step == 0) {
                         currInvestor.transfer(valueLastInvestor);
+                        totalPrize = totalPrize.add(valueLastInvestor);
                     } else {
                         currInvestor.transfer(valueLastTenInvestor);
+                        totalPrize = totalPrize.add(valueLastTenInvestor);
                     }
                     step++;
                     lastNumberInvestor--;
                 } else {
-                    step = 10;
+                    step = 11;
                 }
             }
-            totalPrize = totalPrize.add(valueLastTenInvestor + valueLastInvestor);
+            totalPrize = totalPrize.add(valueLastTenInvestor.mul(10) + valueLastInvestor);
             return true;
         } else {
             return false;
@@ -345,6 +338,7 @@ contract HouseStorage is Ownable, InvestorStorage {
     address public wallet;
 
     bool public stopBuyTokens;
+    bool firstDay = false;
 
     uint256 public currentHouse;
 
@@ -378,7 +372,9 @@ contract HouseStorage is Ownable, InvestorStorage {
         House storage house = houses[_numberHouse];
         house.priceToken = _priceToken;
         house.startTimeBuild = getCurrentDate();
-        //delete arrayPaidTokenLastDay;
+        firstDay = true;
+        totalEthPerHouse = 0;
+        delete arrayPaidTokenLastDay;
     }
 
     function houseInfo(uint256 _numberHouse) public view returns (
@@ -424,7 +420,6 @@ contract HouseStorage is Ownable, InvestorStorage {
 //    function checkStopBuyTokens(uint256 _date) internal returns(bool) {
         uint256 timeLastPayment = startTime;
         uint256 countLastInvestorPerDay = 0;
-        bool firstDay = false;
         if ((getCurrentDate() - startTime) < 1 days) {
             firstDay = true;
         }
@@ -500,7 +495,7 @@ contract HouseStorage is Ownable, InvestorStorage {
         return lastFloor ? 0 : NUMBER_TOKENS_PER_FLOOR;
     }
 
-    function getTotalEthPerHouse(uint256 _numberHouse) public view returns(uint256 tokens) {
+    function getTotalEthPerHouse(uint256 _numberHouse) public view returns(uint256 eths) {
         return houses[_numberHouse].totalEth;
     }
 
