@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 
 library SafeMath {
@@ -76,7 +76,6 @@ contract Ownable {
 
 /**
  * @title InvestorStorage
- * @dev InvestorStorage is a base contract for ***
  */
 contract InvestorStorage is Ownable {
     using SafeMath for uint256;
@@ -207,10 +206,6 @@ contract InvestorStorage is Ownable {
         }
     }
 
-    function test() public view returns (uint256 lengtAmountTokenLastDay) {
-        lengtAmountTokenLastDay = arrayPaidTokenLastDay.length;
-    }
-
     function getMemberArrayPaidTokenLastDay(uint256 index) public view returns (
         address investor, uint256 amountToken, uint256 paymentTime
     ) {
@@ -311,7 +306,6 @@ contract InvestorStorage is Ownable {
 
 /**
  * @title PeriodsStorage
- * @dev PeriodsStorage is a base contract for ***
  */
 contract HouseStorage is Ownable, InvestorStorage {
     using SafeMath for uint256;
@@ -329,7 +323,7 @@ contract HouseStorage is Ownable, InvestorStorage {
     uint256 NUMBER_TOKENS_PER_FLOOR = 300; //for test's
 //    uint256 MAX_NUMBER_FLOOR_PER_HOUSE = 1000; // for test's
     uint256 MAX_NUMBER_FLOOR_PER_HOUSE = 3; //for test's
-    uint256 MIN_NUMBER_SALES_TOKENS = 6;
+    uint256 MIN_NUMBER_SALES_TOKENS = 10;
     uint256 TOKENS_COST_INCREASE_RATIO = 105;
     uint256 PERCENT_TO_ADMINISTRATION = 8;
     uint256 PERCENT_TO_WALLET = 10;
@@ -416,8 +410,8 @@ contract HouseStorage is Ownable, InvestorStorage {
         return arrayLastPayment;
     }
 
-    function checkStopBuyTokens(uint256 _date) public returns(bool) { //for test's
-//    function checkStopBuyTokens(uint256 _date) internal returns(bool) {
+    //function checkStopBuyTokens(uint256 _date) public returns(bool) { //for test's
+    function checkStopBuyTokens(uint256 _date) internal returns(bool) {
         uint256 timeLastPayment = startTime;
         uint256 countLastInvestorPerDay = 0;
         if ((getCurrentDate() - startTime) < 1 days) {
@@ -503,8 +497,8 @@ contract HouseStorage is Ownable, InvestorStorage {
         return houses[_numberHouse].paymentTokenTotal;
     }
 
-    function getBuyToken(uint256 _amountEth) public returns(uint256 totalTokens, uint256 remainEth, bool lastFloorPerHouse) { // for test's
-//    function getBuyToken(uint256 _amountEth) internal returns(uint256 totalTokens, uint256 remainEth, bool lastFloorPerHouse) {
+    //function getBuyToken(uint256 _amountEth) public returns(uint256 totalTokens, uint256 remainEth, bool lastFloorPerHouse) { // for test's
+    function getBuyToken(uint256 _amountEth) internal returns(uint256 totalTokens, uint256 remainEth, bool lastFloorPerHouse) {
         lastFloorPerHouse = false;
         require(_amountEth > 0);
         uint256 diffEth = 0;
@@ -559,8 +553,8 @@ contract HouseStorage is Ownable, InvestorStorage {
         }
     }
 
-    function getDifferentEth(uint256 _amountToken, uint256 _amountEth, uint256 _priceToken) public pure returns(uint256 result) {  //for test's
-//    function getDifferentEth(uint256 _amountToken, uint256 _amountEth, uint256 _priceToken) internal pure returns(uint256 result) {
+    //function getDifferentEth(uint256 _amountToken, uint256 _amountEth, uint256 _priceToken) public pure returns(uint256 result) {  //for test's
+    function getDifferentEth(uint256 _amountToken, uint256 _amountEth, uint256 _priceToken) internal pure returns(uint256 result) {
         uint256 realEth = _amountToken.mul(_priceToken);
         if (realEth <= _amountEth) {
             result = _amountEth.sub(realEth);
@@ -587,7 +581,7 @@ contract HouseStorage is Ownable, InvestorStorage {
         uint256 refundEth = inv.amountToken.mul(averagePriceToken);
         uint256 countStep = currentHouse.sub(inv.numberHouse);
         uint256 amountWallet = 0;
-        //if (address(this).balance > refundEth){ // for test's
+        if (address(this).balance > refundEth){ // for test's
             if (countStep == 0) {
                 amountWallet = refundEth.mul(PERCENT_TO_WALLET).div(100);
             } else {
@@ -607,9 +601,9 @@ contract HouseStorage is Ownable, InvestorStorage {
             emit TokenSale(_investor, _date, averagePriceToken, refundEth.sub(amountWallet), inv.amountToken);
             inv.amountToken = 0;
 
-            //wallet.transfer(amountWallet); // for test's
-            //_investor.transfer(refundEth.sub(amountWallet)); // for test's
-        //} // for test's
+            wallet.transfer(amountWallet); // for test's
+            _investor.transfer(refundEth.sub(amountWallet)); // for test's
+        } // for test's
     }
 
     function writePurchaise(uint256 _amountEth, uint256 _amountToken) internal {
@@ -661,7 +655,7 @@ contract DreamCity is Ownable, HouseStorage {
         owner = _owner;
         administrationWallet = _administrationWallet;
         wallet = _wallet;
-        owner = msg.sender; // for test's
+        //owner = msg.sender; // for test's
         averagePriceToken = FIRST_PRICE_TOKEN;
         currentHouse = 1;
         initHouse(1, FIRST_PRICE_TOKEN);
@@ -700,7 +694,7 @@ contract DreamCity is Ownable, HouseStorage {
             (tokens, remainEth, lastFloorPerHouse) = getBuyToken(weiAmount);
             if (tokens == 0) {
                 if (!lastFloorPerHouse) {
-                    //refundEth(_investor, remainEth); // for test's
+                    refundEth(_investor, remainEth); // for test's
                     return 0;
                 } else {
                     revert();
@@ -718,7 +712,7 @@ contract DreamCity is Ownable, HouseStorage {
                 addFundToInvestor(_investor, weiAmount.sub(remainEth), tokens, currentDate, currentHouse);
             }
             emit TotalTokenPurchase(_investor, weiAmount.sub(remainEth), tokens);
-//            refundEth(_investor, remainEth); // for test's
+            refundEth(_investor, remainEth); // for test's
             wallet.transfer(weiAmount);
         }
     }
