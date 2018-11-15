@@ -43,8 +43,34 @@
                             <strong id="walletAddress"></strong>
                             <p></p>
                             Число купленных токенов:
-                            <strong id="walletTokens"></strong>
+                            <strong id="amountToken"></strong>
                             <p></p>
+                            Количество, инвестированного ETH:
+                            <strong id="investmentEth"></strong>
+                            <p></p>
+                            Количество, полученного обратно ETH:
+                            <strong id="refundEth"></strong>
+                            <p></p>
+                            Последний номер дома, с которым вы работали:
+                            <strong id="numberHouse"></strong>
+                            <p></p>
+                            <div class="row">
+                                <div class="col-md-6 col-sm-6 col-lg-6">
+                                    <h6>Введите количество ETH для покупки токенов:</h6>
+                                    <input id="investment" name="investment" value="" type="text">
+                                    <strong>&nbsp;&nbsp; ETH</strong>
+                                    <p></p>
+                                    <button class="btn btn-primary btn-sm" id="buyMyTokens" onclick="buyMyTokens();">Купить токены</button>
+                                    <p></p>
+                                </div>
+                                <div class="col-md-6 col-sm-6 col-lg-6">
+                                    <h6>Продать токены обратно</h6>
+                                    <p></p>
+                                    <button class="btn btn-primary btn-sm" id="saleMyTokens" onclick="saleMyTokens();">Продать токены</button>
+                                    <p></p>
+                                </div>
+
+                            </div>
                         </div>
                     </div>
 
@@ -86,10 +112,6 @@
 
                                 Количество проданных токенов за последние 24 часа, если инвесторов меньше 10:
                                 <strong id="amountTokenLastDayIfLessTen"></strong>
-                            <p></p>
-
-                           <p></p>
-                            <button class="btn btn-primary btn-sm" id="buyMyTokens" onclick="buyMyTokens();">Buy token</button>
                             <p></p>
                         </div>
                     </div>
@@ -133,9 +155,8 @@
                                 <strong id="totalPrize"></strong>
                             <p></p>
 
-                                <span> &nbsp;&nbsp; </span>
-                            <p></p>
-                            <button class="btn btn-primary btn-sm" id="claimTokens" onclick="claimTokens();">Claim token</button>
+                            Общее количество токенов, находящихся у инвесторов:
+                            <strong id="tokenAllocated"></strong>
                             <p></p>
                         </div>
                     </div>
