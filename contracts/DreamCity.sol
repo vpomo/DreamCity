@@ -325,6 +325,7 @@ contract HouseStorage is Ownable, InvestorStorage {
     uint256 NUMBER_TOKENS_PER_FLOOR = 300; //for test's
 //    uint256 MAX_NUMBER_FLOOR_PER_HOUSE = 1000; // for test's
     uint256 MAX_NUMBER_FLOOR_PER_HOUSE = 3; //for test's
+    uint256 MAX_NUMBER_HOUSE = 1000;
     uint256 MIN_NUMBER_SALES_TOKENS = 10;
     uint256 TOKENS_COST_INCREASE_RATIO = 105;
     uint256 PERCENT_TO_ADMINISTRATION = 8;
@@ -438,7 +439,9 @@ contract HouseStorage is Ownable, InvestorStorage {
             if (_date > timeLastPayment + 1 days) {
                 stopBuyTokens = false;
                 currentHouse++;
-                initHouse(currentHouse, averagePriceToken);
+                if (currentHouse < MAX_NUMBER_HOUSE) {
+                    initHouse(currentHouse, averagePriceToken);
+                }
             }
         }
         return stopBuyTokens;
@@ -703,7 +706,7 @@ contract DreamCity is Ownable, HouseStorage {
                 }
             }
 
-            totalEthRaised = totalEthRaised.add(weiAmount);
+            totalEthRaised = totalEthRaised.add(weiAmount).sub(remainEth);
             totalTokenRaised = totalTokenRaised.add(tokens);
             tokenAllocated = tokenAllocated.add(tokens);
             setTimePayment(currentDate);
