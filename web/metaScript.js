@@ -43,25 +43,52 @@ function startApp() {
 
             var totalEth = houseInfo[4] / decimal;
             $('#totalEth').html(totalEth.toFixed(4));
-        });
+			
+			var totalPrizeLastInvestor = totalEth / 100;
+			
+			$('#totalPrizeLastInvestor').html(totalPrizeLastInvestor.toFixed(4));
+            console.log("totalPrizeLastInvestor = " + totalPrizeLastInvestor.toFixed(4));
 
-        contract.houseTimeInfo(currHouse, function (error, dataTimeInfo) {
-            console.log("houseTimeInfo = " + JSON.stringify(dataTimeInfo));
+            var priceTokenNextHouse = totalEth / paymentTokenTotal;
 
-            var startTimeBuild = timeConverter(dataTimeInfo[0]);
-            var stopTimeBuild;
-            var startTimeBuildNext;
-            if (dataTimeInfo[1] == 0) {
-                stopTimeBuild = "---";
-                startTimeBuildNext = "---";
-            } else {
-                stopTimeBuild = timeConverter(dataTimeInfo[1]);
-                startTimeBuildNext = timeConverter(dataTimeInfo[0] + 86401);
-            }
+            contract.houseTimeInfo(currHouse, function (error, dataTimeInfo) {
+                console.log("houseTimeInfo = " + JSON.stringify(dataTimeInfo));
 
-            $('#startTimeBuild').html(startTimeBuild);
-            $('#stopTimeBuild').html(stopTimeBuild);
-            $('#startTimeBuildNext').html(startTimeBuildNext);
+                var startTimeBuild = timeConverter(dataTimeInfo[0]);
+                var stopTimeBuild;
+                var startTimeBuildNext;
+                if (dataTimeInfo[1] == 0) {
+                    stopTimeBuild = "---";
+                    startTimeBuildNext = "---";
+                    $('#priceTokenNextHouse').html("---");
+                } else {
+                    stopTimeBuild = timeConverter(dataTimeInfo[1]);
+                    startTimeBuildNext = timeConverter(dataTimeInfo[0] + 86401);
+                    $('#priceTokenNextHouse').html(priceTokenNextHouse.toFixed(4));
+                }
+
+                $('#startTimeBuild').html(startTimeBuild);
+                $('#stopTimeBuild').html(stopTimeBuild);
+                $('#startTimeBuildNext').html(startTimeBuildNext);
+
+            });
+
+            contract.getAmountTokenLastDayIfLessTen( function (error, data) {
+                console.log("getAmountTokenLastDayIfLessTen = " + data);
+                var amountTokenLastDayIfLessTen = data[0];
+                var countInvestor = data[1];
+                $('#amountTokenLastDayIfLessTen').html(amountTokenLastDayIfLessTen.toFixed(0));
+
+                var totalPrizeAllInvestor = totalPrizeLastInvestor / 10;
+                if (Number(countInvestor) < 11) {
+                    totalPrizeAllInvestor = totalPrizeAllInvestor*countInvestor + totalPrizeLastInvestor;
+                    $('#totalPrizeAllInvestor').html(totalPrizeAllInvestor.toFixed(4));
+                } else {
+                    totalPrizeAllInvestor = totalPrizeLastInvestor + totalPrizeLastInvestor;
+                    $('#totalPrizeAllInvestor').html(totalPrizeAllInvestor.toFixed(4));
+                }
+            });
+
         });
 
         contract.getFreeTokenPerFloor(currHouse, function (error, dataGetFreeTokenPerFloor) {
@@ -85,18 +112,13 @@ function startApp() {
         $('#amountTokenLastDay').html(amountTokenLastDay.toFixed(0));
     });
 
-    contract.getAmountTokenLastDayIfLessTen( function (error, data) {
-        console.log("getAmountTokenLastDayIfLessTen = " + data);
-        var amountTokenLastDayIfLessTen = data;
-        $('#amountTokenLastDayIfLessTen').html(amountTokenLastDayIfLessTen.toFixed(0));
-    });
-
+/*
     contract.getPriceTokenNextHouse( function (error, data) {
         console.log("getPriceTokenNextHouse = " + data);
         var priceTokenNextHouse = data;
         $('#priceTokenNextHouse').html(priceTokenNextHouse.toFixed(0));
     });
-
+*/
     contract.totalTokenRaised.call( function (error, data) {
         console.log("totalTokenRaised = " + data);
         var totalTokenRaised = data;
@@ -115,11 +137,11 @@ function startApp() {
         $('#totalFloorBuilded').html(totalFloorBuilded.toFixed(0));
     });
 
-    contract.totalPrize.call( function (error, data) {
-        console.log("totalPrize = " + data);
-        var totalPrize = data;
-        $('#totalPrize').html(totalPrize.toFixed(0));
-    });
+//    contract.totalPrize.call( function (error, data) {
+//        console.log("totalPrize = " + data);
+        //var totalPrize = data;
+//        $('#totalPrize').html(totalPrize.toFixed(0));
+    //});
 
     contract.tokenAllocated.call( function (error, data) {
         console.log("tokenAllocated = " + data);
