@@ -256,6 +256,21 @@ var saleEthOne = 0.0001*decimal;
 
     });
 
+    it('check data for one day', async ()  => {
+        // 1541340400 - current time // Sun, 04 Nov 2018 14:06:40 GMT
+        // 1541354400 - checking time // Sun, 04 Nov 2018 18:00:00 GMT
+        var isOneDay = await contract.isOneDay.call(1541354400);
+        // console.log("isOneDay", isOneDay);
+        assert.equal(true, isOneDay);
+
+        // 1541379600 - checking time // Mon, 05 Nov 2018 01:00:00 GMT
+        await contract.setSimulateDate(1541379600); //Sun, 04 Nov 2018 14:06:40 GMT
+        isOneDay = await contract.isOneDay.call(1541354400);
+        // console.log("isOneDay", isOneDay);
+        assert.equal(false, isOneDay);
+
+    });
+
 });
 
 

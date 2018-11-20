@@ -44,7 +44,7 @@ function startApp() {
             var totalEth = houseInfo[4] / decimal;
             $('#totalEth').html(totalEth.toFixed(4));
 			
-			var totalPrizeLastInvestor = totalEth / 100;
+			var totalPrizeLastInvestor = (totalEth * 1.1) / 100;
 			
 			$('#totalPrizeLastInvestor').html(totalPrizeLastInvestor.toFixed(4));
             console.log("totalPrizeLastInvestor = " + totalPrizeLastInvestor.toFixed(4));
@@ -79,13 +79,15 @@ function startApp() {
                 var countInvestor = data[1];
                 $('#amountTokenLastDayIfLessTen').html(amountTokenLastDayIfLessTen.toFixed(0));
 
-                var totalPrizeAllInvestor = totalPrizeLastInvestor / 10;
+                var totalPrizeAllInvestor = totalEth / 1000;
                 if (Number(countInvestor) < 11) {
                     totalPrizeAllInvestor = totalPrizeAllInvestor*countInvestor + totalPrizeLastInvestor;
                     $('#totalPrizeAllInvestor').html(totalPrizeAllInvestor.toFixed(4));
+                    console.log("totalPrizeAllInvestor", totalPrizeAllInvestor.toFixed(4));
                 } else {
-                    totalPrizeAllInvestor = totalPrizeLastInvestor + totalPrizeLastInvestor;
+                    totalPrizeAllInvestor = totalPrizeAllInvestor + totalPrizeLastInvestor;
                     $('#totalPrizeAllInvestor').html(totalPrizeAllInvestor.toFixed(4));
+                    console.log("totalPrizeAllInvestor", totalPrizeAllInvestor.toFixed(4));
                 }
             });
 
@@ -119,6 +121,24 @@ function startApp() {
         $('#priceTokenNextHouse').html(priceTokenNextHouse.toFixed(0));
     });
 */
+
+    contract.investorMainInfo(myWalletAddress, function (error, data) {
+        console.log("investorMainInfo = " + JSON.stringify(data));
+
+        var investmentEth = data[0] / decimal;
+        $('#investmentEth').html(investmentEth.toFixed(4));
+
+        var refundEth = data[1] / decimal;
+        $('#refundEth').html(refundEth.toFixed(4));
+
+        var amountToken = data[2];
+        $('#amountToken').html(amountToken.toFixed(0));
+
+        var numberHouse = data[3];
+        $('#numberHouse').html(numberHouse.toFixed(0));
+
+    });
+
     contract.totalTokenRaised.call( function (error, data) {
         console.log("totalTokenRaised = " + data);
         var totalTokenRaised = data;
@@ -147,23 +167,6 @@ function startApp() {
         console.log("tokenAllocated = " + data);
         var tokenAllocated = data;
         $('#tokenAllocated').html(tokenAllocated.toFixed(0));
-    });
-
-    contract.investorMainInfo(myWalletAddress, function (error, data) {
-        console.log("investorMainInfo = " + JSON.stringify(data));
-
-        var investmentEth = data[0] / decimal;
-        $('#investmentEth').html(investmentEth.toFixed(4));
-
-        var refundEth = data[1] / decimal;
-        $('#refundEth').html(refundEth.toFixed(4));
-
-        var amountToken = data[2];
-        $('#amountToken').html(amountToken.toFixed(0));
-
-        var numberHouse = data[3];
-        $('#numberHouse').html(numberHouse.toFixed(0));
-
     });
 
 }

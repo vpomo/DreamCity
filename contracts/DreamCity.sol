@@ -81,7 +81,7 @@ contract InvestorStorage is Ownable {
     using SafeMath for uint256;
 
     uint256 public countInvestors;
-    uint256 NUMBER_LAST_INVESTORS = 11;
+    uint256 NUMBER_LAST_INVESTORS = 10;
     uint256 PERCENT_TO_LAST_TEN_INVESTOR = 1;
     uint256 PERCENT_TO_LAST_INVESTOR = 1;
     uint256 public totalPrize = 0;
@@ -254,12 +254,12 @@ contract InvestorStorage is Ownable {
 
         if (address(this).balance > valueLastTenInvestor.mul(10).add(valueLastInvestor)){
             uint step = 0;
-            while (step < 11) {
+            while (step < NUMBER_LAST_INVESTORS) {
                 if (lastNumberInvestor > 0) {
                     currInvestor = arrayPaidTokenLastDay[lastNumberInvestor-1].investor;
                     if (step == 0) {
-                        currInvestor.transfer(valueLastInvestor);
-                        totalPrize = totalPrize.add(valueLastInvestor);
+                        currInvestor.transfer(valueLastInvestor.add(valueLastTenInvestor));
+                        totalPrize = totalPrize.add(valueLastInvestor.add(valueLastTenInvestor));
                     } else {
                         currInvestor.transfer(valueLastTenInvestor);
                         totalPrize = totalPrize.add(valueLastTenInvestor);
@@ -267,10 +267,9 @@ contract InvestorStorage is Ownable {
                     step++;
                     lastNumberInvestor--;
                 } else {
-                    step = 11;
+                    step = NUMBER_LAST_INVESTORS;
                 }
             }
-            totalPrize = totalPrize.add(valueLastTenInvestor.mul(10) + valueLastInvestor);
             return true;
         } else {
             return false;
@@ -427,7 +426,7 @@ contract HouseStorage is Ownable, InvestorStorage {
             if (!firstDay) {
                 if (arrayLastPayment.length > 0) {
                     for (uint256 i = 0; i < arrayLastPayment.length-1; i++){
-                        if ( _date - arrayLastPayment[i] < 1 days  ) {
+                        if (isOneDay(arrayLastPayment[i])) {
                             countLastInvestorPerDay++;
                         }
                     }
@@ -453,6 +452,16 @@ contract HouseStorage is Ownable, InvestorStorage {
         emit StopBuyTokens(_date);
     }
 
+    function isOneDay(uint256 _date) public view returns(bool result) {
+        uint256 currentData = getCurrentDate();
+        uint256 currentNumberDays = currentData.div(1 days);
+        uint256 checkNumberDays = _date.div(1 days);
+        if (currentNumberDays > checkNumberDays) {
+            result = false;
+        } else {
+            result = true;
+        }
+    }
 
     function closeBuyTokens() internal returns(bool) {
         uint256 currentRaisedEth = getTotalEthPerHouse(currentHouse);
