@@ -63,7 +63,7 @@ var saleEthOne = 0.0001*decimal;
 
 
     it('check next floor', async ()  => {
-        await contract.setSimulateDate(1541066580); //Sat, 03 Nov 2018 10:20:00 GMT
+        //await contract.setSimulateDate(1541066580); //Sat, 03 Nov 2018 10:20:00 GMT
         var houseInfo = await contract.houseInfo.call(1);
 //        console.log("houseInfo", JSON.stringify(houseInfo));
 //         console.log("houseInfo.paymentTokenPerFloor", Number(houseInfo.paymentTokenPerFloor));
@@ -173,7 +173,7 @@ var saleEthOne = 0.0001*decimal;
 
 
     it('check start buy token for (day + 1) after stop buy token', async ()  => {
-        await contract.setSimulateDate(1541340400); //Sun, 04 Nov 2018 14:06:40 GMT
+        await contract.setSimulateDate(1541206800); //Sat, 03 Nov 2018 01:00:00 GMT
         await contract.buyTokens(accounts[6], {from:accounts[6], value: buyEthOne});
 
         var averagePriceToken = await contract.averagePriceToken.call();
@@ -256,22 +256,44 @@ var saleEthOne = 0.0001*decimal;
 
     });
 
-    it('check data for one day', async ()  => {
+    it('check time for change status buy token', async ()  => {
         // 1541340400 - current time // Sun, 04 Nov 2018 14:06:40 GMT
-        // 1541354400 - checking time // Sun, 04 Nov 2018 18:00:00 GMT
-        var isOneDay = await contract.isOneDay.call(1541354400);
-        // console.log("isOneDay", isOneDay);
-        assert.equal(true, isOneDay);
+        var numberDay = await contract.getNumberDay.call(1541340400);
+        var investorsPerDay  = await contract.getPaidPerDay.call(numberDay);
+        console.log("investorsPerDay", Number(investorsPerDay));
+        var stopBuyToken = await contract.stopBuyTokens.call();
+        console.log("stopBuyToken", stopBuyToken);
 
+        // assert.equal(true, stopBuyToken);
+
+        // 1541379600 - checking time // Mon, 05 Nov 2018 01:00:00 GMT
+        await contract.setSimulateDate(1541379600); //Sun, 04 Nov 2018 14:06:40 GMT
+        await contract.buyTokens(accounts[9], {from:accounts[9], value: buyEthOne});
+        stopBuyToken = await contract.stopBuyTokens.call();
+        console.log("stopBuyToken", stopBuyToken);
+        numberDay = await contract.getNumberDay.call(1541379600);
+        investorsPerDay  = await contract.getPaidPerDay.call(numberDay);
+        console.log("investorsPerDay", Number(investorsPerDay));
+
+        // 1541466000 - checking time // Tue, 06 Nov 2018 01:00:00 GMT
+        await contract.setSimulateDate(1541466000); //Tue, 06 Nov 2018 01:00:00 GMT
+        await contract.buyTokens(accounts[9], {from:accounts[9], value: buyEthOne});
+        stopBuyToken = await contract.stopBuyTokens.call();
+        console.log("stopBuyToken", stopBuyToken);
+        numberDay = await contract.getNumberDay.call(1541466000);
+        investorsPerDay  = await contract.getPaidPerDay.call(numberDay);
+        console.log("investorsPerDay", Number(investorsPerDay));
+
+
+/*
         // 1541379600 - checking time // Mon, 05 Nov 2018 01:00:00 GMT
         await contract.setSimulateDate(1541379600); //Sun, 04 Nov 2018 14:06:40 GMT
         isOneDay = await contract.isOneDay.call(1541354400);
         // console.log("isOneDay", isOneDay);
         assert.equal(false, isOneDay);
+*/
 
     });
 
 });
 
-
-//Сделать проверку на ведение массива со списком последних инвесторов

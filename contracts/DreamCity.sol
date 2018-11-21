@@ -110,6 +110,7 @@ contract InvestorStorage is Ownable {
     PaidTokenLastDay[] arrayPaidTokenLastDay;
 
     mapping (address => Investor) investors;
+    mapping (uint256 => uint256) public paidPerDay;
 
     event TokenPurchaise(address indexed investor, uint256 paymentTime, uint256 amountEth, uint256 amountToken);
     event ChangeTime(uint256 _newDate, uint256 simulateDate);
@@ -170,6 +171,8 @@ contract InvestorStorage is Ownable {
         inv.numberHouse = _currentHouse;
         setPaidLastInvestorPerDay(_investor, _amountToken, _paymentTime);
         totalEthPerHouse = totalEthPerHouse.add(_investment);
+        uint256 numberDay = getNumberDay(getCurrentDate());
+        paidPerDay[numberDay]++;
         emit TokenPurchaise(_investor, _paymentTime, _investment, _amountToken);
     }
 
@@ -193,7 +196,7 @@ contract InvestorStorage is Ownable {
         countElem = 0;
         uint256 currentDay = getCurrentDate();
         uint256 lengthArray = arrayPaidTokenLastDay.length;
-        if (lengthArray > 0) {
+        if (lengthArray > 1) {
             while (countElem < lengthArray) {
                 if (currentDay.sub(arrayPaidTokenLastDay[0].paymentTime) > 1 days) {
                     for (uint i = 0; i<arrayPaidTokenLastDay.length-1; i++){
@@ -283,6 +286,14 @@ contract InvestorStorage is Ownable {
         return now;
     }
 
+    function getNumberDay(uint256 _date) public pure returns (uint256 result) {
+        result = _date.div(1 days);
+    }
+
+    function getPaidPerDay(uint256 _numberDay) public view returns (uint256 result) {
+        result = paidPerDay[_numberDay];
+    }
+
     function setSimulateDate(uint256 _newDate) public onlyOwner {
         if (isDemo) {
             require(_newDate > simulateDate);
@@ -350,8 +361,6 @@ contract HouseStorage is Ownable, InvestorStorage {
         uint256 stopTimeBuild;
     }
 
-    uint256[] arrayLastPayment;
-
     mapping (uint256 => House) private houses;
 
     event NextFloor(uint256 date, uint256 numberFloor);
@@ -393,45 +402,26 @@ contract HouseStorage is Ownable, InvestorStorage {
         stopTimeBuild = houses[_numberHouse].stopTimeBuild;
     }
 
-    function setTimePayment(uint256 _date) internal {
-        require(_date > 0);
-        if (arrayLastPayment.length > MIN_NUMBER_SALES_TOKENS) {
-            arrayLastPayment = removeElemLastTimePayment(0);
-        }
-        arrayLastPayment.push(_date);
-    }
-
-    function removeElemLastTimePayment(uint index) internal returns(uint[]) {
-        if (index >= arrayLastPayment.length) return;
-
-        for (uint i = index; i<arrayLastPayment.length-1; i++){
-            arrayLastPayment[i] = arrayLastPayment[i+1];
-        }
-        delete arrayLastPayment[arrayLastPayment.length-1];
-        arrayLastPayment.length--;
-        return arrayLastPayment;
-    }
-
     function checkStopBuyTokens(uint256 _date) public returns(bool) { //for test's
     //function checkStopBuyTokens(uint256 _date) internal returns(bool) {
         uint256 timeLastPayment = startTime;
-        uint256 countLastInvestorPerDay = 0;
+        uint256 countLastInvestorPrevDay = 0;
+        uint lastNumberInvestor = arrayPaidTokenLastDay.length-1;
+
         if ((getCurrentDate() - startTime) < 1 days) {
             firstDay = true;
         }
         if (!firstDay) {
-            timeLastPayment = arrayLastPayment[arrayLastPayment.length-1];
+            if (lastNumberInvestor >= 0) {
+                timeLastPayment = arrayPaidTokenLastDay[lastNumberInvestor].paymentTime;
+            }
         }
         if (stopBuyTokens == false) {
             if (!firstDay) {
-                if (arrayLastPayment.length > 0) {
-                    for (uint256 i = 0; i < arrayLastPayment.length-1; i++){
-                        if (isOneDay(arrayLastPayment[i])) {
-                            countLastInvestorPerDay++;
-                        }
-                    }
-                }
-                if (countLastInvestorPerDay < MIN_NUMBER_SALES_TOKENS || houses[currentHouse].lastFloor.add(1) >= MAX_NUMBER_FLOOR_PER_HOUSE) {
+                uint256 numberDay = getNumberDay(_date);
+                countLastInvestorPrevDay = paidPerDay[numberDay-1];
+
+                if (countLastInvestorPrevDay < MIN_NUMBER_SALES_TOKENS || houses[currentHouse].lastFloor.add(1) >= MAX_NUMBER_FLOOR_PER_HOUSE) {
                     makeStopBuyTokens(_date);                }
             }
         } else {
@@ -444,6 +434,39 @@ contract HouseStorage is Ownable, InvestorStorage {
             }
         }
         return stopBuyTokens;
+
+        /*
+                uint256 timeLastPayment = startTime;
+                uint256 countLastInvestorPrevDay = 0;
+                uint numberLastMemberArray = arrayPaidTokenLastDay.length-1;
+                uint256 numberCheckDay = getNumberDay(_date);
+
+                if (numberLastMemberArray >= 0) {
+                    timeLastPayment = arrayPaidTokenLastDay[numberLastMemberArray].paymentTime;
+                }
+                uint256 numberLastPaidDay = getNumberDay(timeLastPayment);
+
+                if (numberCheckDay > numberLastPaidDay) {
+                    firstDay = false;
+                }
+                if (stopBuyTokens == false) {
+                    if (!firstDay) {
+                        countLastInvestorPrevDay = paidPerDay[numberCheckDay-1];
+
+                        if (countLastInvestorPrevDay < MIN_NUMBER_SALES_TOKENS || houses[currentHouse].lastFloor.add(1) >= MAX_NUMBER_FLOOR_PER_HOUSE) {
+                            makeStopBuyTokens(_date);                }
+                    }
+                } else {
+                    if (numberCheckDay.sub(numberLastPaidDay) > 1) {
+                        stopBuyTokens = false;
+                        currentHouse++;
+                        if (currentHouse < MAX_NUMBER_HOUSE) {
+                            initHouse(currentHouse, averagePriceToken);
+                        }
+                    }
+                }
+                return stopBuyTokens;
+        */
     }
 
     function makeStopBuyTokens(uint256 _date) internal {
@@ -718,7 +741,6 @@ contract DreamCity is Ownable, HouseStorage {
             totalEthRaised = totalEthRaised.add(weiAmount).sub(remainEth);
             totalTokenRaised = totalTokenRaised.add(tokens);
             tokenAllocated = tokenAllocated.add(tokens);
-            setTimePayment(currentDate);
 
             if (checkNewInvestor(_investor)) {
                 newInvestor(_investor, weiAmount.sub(remainEth), tokens, currentDate, currentHouse);
