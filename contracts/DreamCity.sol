@@ -66,7 +66,7 @@ contract Ownable {
      * @dev Allows the current owner to transfer control of the contract to a newOwner.
      * @param _newOwner The address to transfer ownership to.
      */
-    function changeOwner(address _newOwner) onlyOwner internal {
+    function changeOwner(address _newOwner) onlyOwner public {
         require(_newOwner != address(0));
         emit OwnerChanged(owner, _newOwner);
         owner = _newOwner;
@@ -408,10 +408,11 @@ contract HouseStorage is Ownable, InvestorStorage {
         uint256 countLastInvestorPrevDay = 0;
         uint lastNumberInvestor = arrayPaidTokenLastDay.length-1;
         uint256 numberCheckDay = getNumberDay(_date);
+        countLastInvestorPrevDay = paidPerDay[numberCheckDay-1];
 
-//        if () {
-//            firstDay
-//        }
+        if (countLastInvestorPrevDay > 0) {
+            firstDay = false;
+        }
 
         if (!firstDay) {
             if (lastNumberInvestor >= 0) {
@@ -422,11 +423,11 @@ contract HouseStorage is Ownable, InvestorStorage {
 
         if (stopBuyTokens == false) {
             if (!firstDay) {
-                uint256 numberDay = getNumberDay(_date);
-                countLastInvestorPrevDay = paidPerDay[numberDay-1];
+                countLastInvestorPrevDay = paidPerDay[numberCheckDay-1];
 
                 if (countLastInvestorPrevDay < MIN_NUMBER_SALES_TOKENS || houses[currentHouse].lastFloor.add(1) >= MAX_NUMBER_FLOOR_PER_HOUSE) {
-                    makeStopBuyTokens(_date);                }
+                    makeStopBuyTokens(_date);
+                }
             }
         } else {
             if (numberCheckDay.sub(numberLastPaidDay) > 1) {
@@ -438,39 +439,6 @@ contract HouseStorage is Ownable, InvestorStorage {
             }
         }
         return stopBuyTokens;
-
-        /*
-                uint256 timeLastPayment = startTime;
-                uint256 countLastInvestorPrevDay = 0;
-                uint numberLastMemberArray = arrayPaidTokenLastDay.length-1;
-                uint256 numberCheckDay = getNumberDay(_date);
-
-                if (numberLastMemberArray >= 0) {
-                    timeLastPayment = arrayPaidTokenLastDay[numberLastMemberArray].paymentTime;
-                }
-                uint256 numberLastPaidDay = getNumberDay(timeLastPayment);
-
-                if (numberCheckDay > numberLastPaidDay) {
-                    firstDay = false;
-                }
-                if (stopBuyTokens == false) {
-                    if (!firstDay) {
-                        countLastInvestorPrevDay = paidPerDay[numberCheckDay-1];
-
-                        if (countLastInvestorPrevDay < MIN_NUMBER_SALES_TOKENS || houses[currentHouse].lastFloor.add(1) >= MAX_NUMBER_FLOOR_PER_HOUSE) {
-                            makeStopBuyTokens(_date);                }
-                    }
-                } else {
-                    if (numberCheckDay.sub(numberLastPaidDay) > 1) {
-                        stopBuyTokens = false;
-                        currentHouse++;
-                        if (currentHouse < MAX_NUMBER_HOUSE) {
-                            initHouse(currentHouse, averagePriceToken);
-                        }
-                    }
-                }
-                return stopBuyTokens;
-        */
     }
 
     function makeStopBuyTokens(uint256 _date) internal {

@@ -257,8 +257,8 @@ var saleEthOne = 0.0001*decimal;
     });
 
     it('check time for change status buy token', async ()  => {
-        // 1541340400 - current time // Sun, 04 Nov 2018 14:06:40 GMT
-        var numberDay = await contract.getNumberDay.call(1541340400);
+        // 1541206800 - current time // //Sat, 03 Nov 2018 01:00:00 GMT
+        var numberDay = await contract.getNumberDay.call(1541206800);
         var investorsPerDay  = await contract.getPaidPerDay.call(numberDay);
         console.log("investorsPerDay", Number(investorsPerDay));
         var stopBuyToken = await contract.stopBuyTokens.call();
@@ -266,21 +266,21 @@ var saleEthOne = 0.0001*decimal;
 
         // assert.equal(true, stopBuyToken);
 
+        // 1541293200 - checking time // Sun, 04 Nov 2018 01:00:00 GMT
+        await contract.setSimulateDate(1541293200); //Sun, 04 Nov 2018 01:00:00 GMT
+        await contract.buyTokens(accounts[9], {from:accounts[9], value: buyEthOne});
+        stopBuyToken = await contract.stopBuyTokens.call();
+        console.log("stopBuyToken", stopBuyToken);
+        numberDay = await contract.getNumberDay.call(1541293200);
+        investorsPerDay  = await contract.getPaidPerDay.call(numberDay);
+        console.log("investorsPerDay", Number(investorsPerDay));
+
         // 1541379600 - checking time // Mon, 05 Nov 2018 01:00:00 GMT
-        await contract.setSimulateDate(1541379600); //Sun, 04 Nov 2018 14:06:40 GMT
+        await contract.setSimulateDate(1541379600); //Mon, 05 Nov 2018 01:00:00 GMT
         await contract.buyTokens(accounts[9], {from:accounts[9], value: buyEthOne});
         stopBuyToken = await contract.stopBuyTokens.call();
         console.log("stopBuyToken", stopBuyToken);
         numberDay = await contract.getNumberDay.call(1541379600);
-        investorsPerDay  = await contract.getPaidPerDay.call(numberDay);
-        console.log("investorsPerDay", Number(investorsPerDay));
-
-        // 1541466000 - checking time // Tue, 06 Nov 2018 01:00:00 GMT
-        await contract.setSimulateDate(1541466000); //Tue, 06 Nov 2018 01:00:00 GMT
-        await contract.buyTokens(accounts[9], {from:accounts[9], value: buyEthOne});
-        stopBuyToken = await contract.stopBuyTokens.call();
-        console.log("stopBuyToken", stopBuyToken);
-        numberDay = await contract.getNumberDay.call(1541466000);
         investorsPerDay  = await contract.getPaidPerDay.call(numberDay);
         console.log("investorsPerDay", Number(investorsPerDay));
 
