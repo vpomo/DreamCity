@@ -407,15 +407,19 @@ contract HouseStorage is Ownable, InvestorStorage {
         uint256 timeLastPayment = startTime;
         uint256 countLastInvestorPrevDay = 0;
         uint lastNumberInvestor = arrayPaidTokenLastDay.length-1;
+        uint256 numberCheckDay = getNumberDay(_date);
 
-        if ((getCurrentDate() - startTime) < 1 days) {
-            firstDay = true;
-        }
+//        if () {
+//            firstDay
+//        }
+
         if (!firstDay) {
             if (lastNumberInvestor >= 0) {
                 timeLastPayment = arrayPaidTokenLastDay[lastNumberInvestor].paymentTime;
             }
         }
+        uint256 numberLastPaidDay = getNumberDay(timeLastPayment);
+
         if (stopBuyTokens == false) {
             if (!firstDay) {
                 uint256 numberDay = getNumberDay(_date);
@@ -425,7 +429,7 @@ contract HouseStorage is Ownable, InvestorStorage {
                     makeStopBuyTokens(_date);                }
             }
         } else {
-            if (_date > timeLastPayment + 1 days) {
+            if (numberCheckDay.sub(numberLastPaidDay) > 1) {
                 stopBuyTokens = false;
                 currentHouse++;
                 if (currentHouse < MAX_NUMBER_HOUSE) {
