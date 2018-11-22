@@ -172,7 +172,7 @@ contract InvestorStorage is Ownable {
         setPaidLastInvestorPerDay(_investor, _amountToken, _paymentTime);
         totalEthPerHouse = totalEthPerHouse.add(_investment);
         uint256 numberDay = getNumberDay(getCurrentDate());
-        paidPerDay[numberDay]++;
+        paidPerDay[numberDay] = paidPerDay[numberDay].add(_amountToken);
         emit TokenPurchaise(_investor, _paymentTime, _investment, _amountToken);
     }
 
@@ -405,12 +405,12 @@ contract HouseStorage is Ownable, InvestorStorage {
     function checkStopBuyTokens(uint256 _date) public returns(bool) { //for test's
     //function checkStopBuyTokens(uint256 _date) internal returns(bool) {
         uint256 timeLastPayment = startTime;
-        uint256 countLastInvestorPrevDay = 0;
+        uint256 countPaidTokenPrevDay = 0;
         uint lastNumberInvestor = arrayPaidTokenLastDay.length-1;
         uint256 numberCheckDay = getNumberDay(_date);
-        countLastInvestorPrevDay = paidPerDay[numberCheckDay-1];
+        countPaidTokenPrevDay = paidPerDay[numberCheckDay-1];
 
-        if (countLastInvestorPrevDay > 0) {
+        if (countPaidTokenPrevDay > 0) {
             firstDay = false;
         }
 
@@ -423,9 +423,11 @@ contract HouseStorage is Ownable, InvestorStorage {
 
         if (stopBuyTokens == false) {
             if (!firstDay) {
-                countLastInvestorPrevDay = paidPerDay[numberCheckDay-1];
-
-                if (countLastInvestorPrevDay < MIN_NUMBER_SALES_TOKENS || houses[currentHouse].lastFloor.add(1) >= MAX_NUMBER_FLOOR_PER_HOUSE) {
+                if (countPaidTokenPrevDay < MIN_NUMBER_SALES_TOKENS || houses[currentHouse].lastFloor.add(1) >= MAX_NUMBER_FLOOR_PER_HOUSE) {
+                    makeStopBuyTokens(_date);
+                }
+            } else {
+                if (paidPerDay[numberCheckDay] == NUMBER_TOKENS_PER_FLOOR.mul(MAX_NUMBER_FLOOR_PER_HOUSE)) {
                     makeStopBuyTokens(_date);
                 }
             }
