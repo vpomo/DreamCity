@@ -1,4 +1,4 @@
-var adrressContractRopsten = "0xd6ecf810b71fa60391f1af50b378b00d8cde7634";
+var adrressContractRopsten = "0x527f9b36372ee95065081fa516f5472d84375cb4";
 var adrressContractMain = "0xe4a60882c473e008b4e1c942bd73addf50483825";
 var contract;
 
@@ -63,7 +63,7 @@ function startApp() {
                     $('#priceTokenNextHouse').html("---");
                 } else {
                     stopTimeBuild = timeConverter(dataTimeInfo[1]);
-                    startTimeBuildNext = timeConverter(dataTimeInfo[0] + 86401);
+                    startTimeBuildNext = timeConverter(Number(dataTimeInfo[0]) + Number(86401));
                     $('#priceTokenNextHouse').html(priceTokenNextHouse.toFixed(4));
                 }
 

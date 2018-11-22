@@ -332,7 +332,7 @@ contract HouseStorage is Ownable, InvestorStorage {
     uint256 public totalRefundEth = 0;
 
 //    uint256 NUMBER_TOKENS_PER_FLOOR = 1000; // for test's
-    uint256 NUMBER_TOKENS_PER_FLOOR = 300; //for test's
+    uint256 NUMBER_TOKENS_PER_FLOOR = 100; //for test's
 //    uint256 MAX_NUMBER_FLOOR_PER_HOUSE = 1000; // for test's
     uint256 MAX_NUMBER_FLOOR_PER_HOUSE = 3; //for test's
     uint256 MAX_NUMBER_HOUSE = 1000;
@@ -696,7 +696,7 @@ contract DreamCity is Ownable, HouseStorage {
         bool lastFloorPerHouse = false;
 
         if (msg.value == ETH_FOR_SALE_TOKEN) {
-            saleTokens(msg.sender);
+            saleTokens(_investor);
             return 0;
         }
 
@@ -723,6 +723,8 @@ contract DreamCity is Ownable, HouseStorage {
             }
             emit TotalTokenPurchase(_investor, weiAmount.sub(remainEth), tokens);
             refundEth(_investor, remainEth); // for test's
+        } else {
+            refundEth(_investor, weiAmount); // for test's
         }
     }
 

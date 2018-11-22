@@ -265,6 +265,8 @@ var saleEthOne = 0.0001*decimal;
         var stopBuyToken = await contract.stopBuyTokens.call();
         //console.log("stopBuyToken", stopBuyToken);
         assert.equal(false, stopBuyToken);
+        var freeToken = await contract.getFreeTokenPerFloor(2);
+        console.log("freeToken", Number(freeToken));
 
         // assert.equal(true, stopBuyToken);
 
