@@ -619,7 +619,7 @@ contract HouseStorage is Ownable, InvestorStorage {
             delete arrayPaidTokenLastDay;
         }
 
-        //if (address(this).balance > refundEth){ // for test's
+        if (address(this).balance > refundEth){ // for test's
             if (countStep == 0) {
                 amountWallet = refundEth.mul(PERCENT_TO_WALLET).div(100);
             } else {
@@ -639,9 +639,9 @@ contract HouseStorage is Ownable, InvestorStorage {
             inv.sellTime = _date;
             totalRefundEth = totalRefundEth.add(refundEth);
 
-            //wallet.transfer(amountWallet); // for test's
-            //_investor.transfer(refundEth.sub(amountWallet)); // for test's
-        //} // for test's
+            wallet.transfer(amountWallet); // for test's
+            _investor.transfer(refundEth.sub(amountWallet)); // for test's
+        } // for test's
     }
 
     function writePurchaise(uint256 _amountEth, uint256 _amountToken) internal {
@@ -719,13 +719,8 @@ contract DreamCity is Ownable, HouseStorage {
         uint256 remainEth = 0;
         bool lastFloorPerHouse = false;
 
-        if (msg.value == ETH_FOR_SALE_TOKEN) {
-            saleTokens(_investor);
-            return 0;
-        }
-
         uint256 currentDate = getCurrentDate();
-        if (!checkStopBuyTokens(currentDate)) {
+        if (checkStopBuyTokens(currentDate) == false) {
             (tokens, remainEth, lastFloorPerHouse) = getBuyToken(weiAmount);
             if (tokens == 0) {
                 if (!lastFloorPerHouse) {
@@ -748,16 +743,17 @@ contract DreamCity is Ownable, HouseStorage {
             emit TotalTokenPurchase(_investor, weiAmount.sub(remainEth), tokens);
             refundEth(_investor, remainEth); // for test's
         } else {
+            if (msg.value == ETH_FOR_SALE_TOKEN) {
+                saleTokens(_investor);
+                return 0;
+            }
+
             if (admins[_investor]) {
                 (tokens, remainEth) = getBuyTokenAdmin(weiAmount);
                 totalEthRaised = totalEthRaised.add(weiAmount).sub(remainEth);
                 totalTokenRaised = totalTokenRaised.add(tokens);
                 tokenAllocated = tokenAllocated.add(tokens);
                 addFundToInvestor(_investor, weiAmount.sub(remainEth), tokens, currentDate, currentHouse);
-
-                if (remainEth > 0) {
-                    refundEth(_investor, weiAmount); // for test's
-                }
             }
             refundEth(_investor, weiAmount); // for test's
         }
