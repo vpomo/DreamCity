@@ -26,8 +26,8 @@ var saleEthOne = 0.0001*decimal;
 
     it('token purchase check', async ()  => {
         await contract.setDemo(true); //Thu, 01 Nov 2018 10:01:20 GMT
-        await contract.setSimulateDate(1541066480); //Thu, 01 Nov 2018 10:01:20 GMT
         await contract.setStartDate(1541066400); //Thu, 01 Nov 2018 10:00:00 GMT
+        await contract.setSimulateDate(1541066480); //Thu, 01 Nov 2018 10:01:20 GMT
 
         var stopBuyToken = await contract.checkStopBuyTokens.call(1541066480, {from:accounts[4]});
         assert.equal(false, stopBuyToken);
@@ -63,14 +63,7 @@ var saleEthOne = 0.0001*decimal;
 
 
     it('check next floor', async ()  => {
-        //await contract.setSimulateDate(1541066580); //Sat, 03 Nov 2018 10:20:00 GMT
         var houseInfo = await contract.houseInfo.call(1);
-//        console.log("houseInfo", JSON.stringify(houseInfo));
-//         console.log("houseInfo.paymentTokenPerFloor", Number(houseInfo.paymentTokenPerFloor));
-//         console.log("houseInfo.paymentTokenTotal", Number(houseInfo.paymentTokenTotal));
-//         console.log("houseInfo.priceToken", Number(houseInfo.priceToken/decimal));
-//         console.log("houseInfo.lastFloor", Number(houseInfo.lastFloor));
-//         console.log("houseInfo.totalEth", Number(houseInfo.totalEth));
 
         assert.equal(36, Number(houseInfo.paymentTokenPerFloor));
         assert.equal(36, Number(houseInfo.paymentTokenTotal));
@@ -103,27 +96,18 @@ var saleEthOne = 0.0001*decimal;
         await contract.buyTokens(accounts[4], {from:accounts[4], value: buyEthThree});
 
         var mainInfoInvestor = await contract.investorMainInfo.call(accounts[4]);
-        // console.log("mainInfoInvestor", JSON.stringify(mainInfoInvestor));
-        // console.log("investmentEth", mainInfoInvestor.investmentEth/decimal); //investmentEth
-        // console.log("amountToken", Number(mainInfoInvestor.amountToken)); //amountToken
         assert.equal(45.4875, mainInfoInvestor.investmentEth/decimal); //investmentEth
         assert.equal(864, Number(mainInfoInvestor.amountToken)); //amountToken
 
         houseInfo = await contract.houseInfo.call(1);
-//        console.log("houseInfo", JSON.stringify(houseInfo));
-//         console.log("houseInfo.paymentTokenPerFloor", Number(houseInfo.paymentTokenPerFloor));
-//         console.log("houseInfo.paymentTokenTotal", Number(houseInfo.paymentTokenTotal));
-//         console.log("houseInfo.priceToken", Number(houseInfo.priceToken/decimal));
-//         console.log("houseInfo.lastFloor", Number(houseInfo.lastFloor));
-//         console.log("houseInfo.totalEth", Number(houseInfo.totalEth));
         assert.equal(300, Number(houseInfo.paymentTokenPerFloor));
         assert.equal(900, Number(houseInfo.paymentTokenTotal));
         assert.equal(0.055125, Number(houseInfo.priceToken/decimal));
         assert.equal(2, Number(houseInfo.lastFloor));
         assert.equal(47.2875, Number(houseInfo.totalEth/decimal));
-        //console.log("houseInfo.totalEth", Number(houseInfo.totalEth/decimal));
 
     });
+
 
     it('check stop buy tokens last floor', async ()  => {
         var currentRaisedEth = await contract.getTotalEthPerHouse.call(1);
@@ -146,9 +130,10 @@ var saleEthOne = 0.0001*decimal;
 
 });
 
+
     it('check sale token', async ()  => {
-        await contract.setSimulateDate(1541152800); //Fri, 02 Nov 2018 10:00:00 GMT
-        stopBuyToken = await contract.checkStopBuyTokens.call(1541152800, {from:accounts[1]});
+        await contract.setSimulateDate(1541210400); //Sat, 03 Nov 2018 02:00:00 GMT
+        stopBuyToken = await contract.checkStopBuyTokens.call(1541210400, {from:accounts[1]});
         assert.equal(true, stopBuyToken);
 
         // var getBuyToken = await contract.getBuyToken.call(buyEthOne, {from:accounts[5]});
@@ -169,8 +154,10 @@ var saleEthOne = 0.0001*decimal;
         mainInfoInvestor = await contract.investorMainInfo.call(accounts[2]);
         assert.equal(24, Number(mainInfoInvestor.amountToken)); //amountToken
 
-    });
+});
 
+
+/*
 
     it('check start buy token for (day + 1) after stop buy token', async ()  => {
         await contract.setSimulateDate(1541206800); //Sat, 03 Nov 2018 01:00:00 GMT
@@ -292,6 +279,7 @@ var saleEthOne = 0.0001*decimal;
         //console.log("tokensPerDay", Number(tokensPerDay));
         assert.equal(0, Number(tokensPerDay));
     });
+*/
 
 });
 

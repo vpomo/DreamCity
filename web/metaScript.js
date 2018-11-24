@@ -105,20 +105,8 @@ function startApp() {
 
             contract.getAmountTokenLastDayIfLessTen( function (error, data) {
                 console.log("getAmountTokenLastDayIfLessTen = " + data);
-                var amountTokenLastDayIfLessTen = data[0];
-                var countInvestor = data[1];
+                var amountTokenLastDayIfLessTen = data;
                 $('#amountTokenLastDayIfLessTen').html(amountTokenLastDayIfLessTen.toFixed(0));
-
-                var totalPrizeAllInvestor = totalEth / 1000;
-                if (Number(countInvestor) < 11) {
-                    totalPrizeAllInvestor = totalPrizeAllInvestor*countInvestor + totalPrizeLastInvestor;
-                    $('#totalPrizeAllInvestor').html(totalPrizeAllInvestor.toFixed(4));
-                    console.log("totalPrizeAllInvestor", totalPrizeAllInvestor.toFixed(4));
-                } else {
-                    totalPrizeAllInvestor = totalPrizeAllInvestor + totalPrizeLastInvestor;
-                    $('#totalPrizeAllInvestor').html(totalPrizeAllInvestor.toFixed(4));
-                    console.log("totalPrizeAllInvestor", totalPrizeAllInvestor.toFixed(4));
-                }
             });
 
         });
