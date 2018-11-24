@@ -1,6 +1,8 @@
 var adrressContractRopsten = "0x527f9b36372ee95065081fa516f5472d84375cb4";
 var adrressContractMain = "0xe4a60882c473e008b4e1c942bd73addf50483825";
 var contract;
+var SECUND_TO_DAY = 86400;
+var EMPTY_VALUE = "---";
 
 var decimal = 1e18;
 
@@ -32,12 +34,6 @@ function startApp() {
             var priceToken = houseInfo[2] / decimal;
             $('#priceToken').html(priceToken.toFixed(4));
 
-            var priceTokenNext = priceToken * 1.05;
-            $('#priceTokenNext').html(priceTokenNext.toFixed(4));
-
-            var lastFloor = Number(houseInfo[3]) + 1;
-            $('#lastFloor').html(lastFloor);
-
             var paymentTokenTotal = houseInfo[1];
             $('#paymentTokenTotal').html(paymentTokenTotal.toFixed(0));
 
@@ -53,24 +49,58 @@ function startApp() {
 
             contract.houseTimeInfo(currHouse, function (error, dataTimeInfo) {
                 console.log("houseTimeInfo = " + JSON.stringify(dataTimeInfo));
+                console.log("Math.trunc(dataTimeInfo[0]) = " + Math.trunc(dataTimeInfo[0]/SECUND_TO_DAY));
+                var numberDayStopBuild = Math.trunc(dataTimeInfo[0]/SECUND_TO_DAY);
+                numberDayStopBuild += 2;
 
-                var startTimeBuild = timeConverter(dataTimeInfo[0]);
+                var startTimeBuild = timeConverter(Math.trunc(dataTimeInfo[0]/SECUND_TO_DAY)*SECUND_TO_DAY);
+
                 var stopTimeBuild;
                 var startTimeBuildNext;
-                if (dataTimeInfo[1] == 0) {
-                    stopTimeBuild = "---";
-                    startTimeBuildNext = "---";
-                    $('#priceTokenNextHouse').html("---");
+
+                var lastFloor = Number(houseInfo[3]) + 1;
+                var priceTokenNext = priceToken * 1.05;
+                var stopTimeBuildUnix = dataTimeInfo[1];
+
+                if (stopTimeBuildUnix == 0) {
+                    stopTimeBuild = EMPTY_VALUE;
+                    startTimeBuildNext = EMPTY_VALUE;
+                    $('#priceTokenNextHouse').html(EMPTY_VALUE);
+                    $('#numberAllHouse').html(Number(currHouse-1));
+                    $('#lastFloor').html(lastFloor);
+                    $('#priceTokenNext').html(priceTokenNext.toFixed(4));
                 } else {
                     stopTimeBuild = timeConverter(dataTimeInfo[1]);
-                    startTimeBuildNext = timeConverter(Number(dataTimeInfo[0]) + Number(86401));
+                    startTimeBuildNext = timeConverter(numberDayStopBuild*SECUND_TO_DAY + Number(60));
                     $('#priceTokenNextHouse').html(priceTokenNextHouse.toFixed(4));
+                    $('#numberAllHouse').html(Number(currHouse));
+                    $('#lastFloor').html(EMPTY_VALUE);
+                    $('#priceTokenNext').html(EMPTY_VALUE);
                 }
 
                 $('#startTimeBuild').html(startTimeBuild);
                 $('#stopTimeBuild').html(stopTimeBuild);
                 $('#startTimeBuildNext').html(startTimeBuildNext);
 
+                contract.getFreeTokenPerFloor(currHouse, function (error, dataGetFreeTokenPerFloor) {
+                    console.log("getFreeTokenPerFloor = " + JSON.stringify(dataGetFreeTokenPerFloor));
+                    var freeTokenPerFloor = dataGetFreeTokenPerFloor;
+                    if (stopTimeBuildUnix == 0) {
+                        $('#freeTokenPerFloor').html(freeTokenPerFloor.toFixed(0));
+					} else {
+                        $('#freeTokenPerFloor').html(EMPTY_VALUE);
+                    }
+                });
+
+                contract.getFreeTokenNextFloor(function (error, dataGetFreeTokenNextFloor) {
+                    console.log("getFreeTokenNextFloor = " + JSON.stringify(dataGetFreeTokenNextFloor));
+                    var freeTokenNextFloor = dataGetFreeTokenNextFloor;
+                    if (stopTimeBuildUnix == 0) {
+                        $('#freeTokenNextFloor').html(freeTokenNextFloor.toFixed(0));
+                    } else {
+                        $('#freeTokenNextFloor').html(EMPTY_VALUE);
+                    }
+                });
             });
 
             contract.getAmountTokenLastDayIfLessTen( function (error, data) {
@@ -93,19 +123,6 @@ function startApp() {
 
         });
 
-        contract.getFreeTokenPerFloor(currHouse, function (error, dataGetFreeTokenPerFloor) {
-            console.log("getFreeTokenPerFloor = " + JSON.stringify(dataGetFreeTokenPerFloor));
-            var freeTokenPerFloor = dataGetFreeTokenPerFloor;
-            $('#freeTokenPerFloor').html(freeTokenPerFloor.toFixed(0));
-        });
-
-        contract.getFreeTokenNextFloor(function (error, dataGetFreeTokenNextFloor) {
-            console.log("getFreeTokenNextFloor = " + JSON.stringify(dataGetFreeTokenNextFloor));
-            var freeTokenNextFloor = dataGetFreeTokenNextFloor;
-            $('#freeTokenNextFloor').html(freeTokenNextFloor.toFixed(0));
-        });
-
-        $('#numberAllHouse').html(Number(currHouse-1));
     });
 
     contract.getAmountTokenLastDay( function (error, data) {

@@ -469,6 +469,8 @@ contract HouseStorage is Ownable, InvestorStorage {
         uint256 freeEth = currentRaisedEth.sub(transferEth);
         averagePriceToken = freeEth.div(getTotalTokenPerHouse(currentHouse));
         houses[currentHouse].stopTimeBuild = getCurrentDate();
+        totalFloorBuilded = totalFloorBuilded.add(1);
+
         if (address(this).balance > transferEth){
             administrationWallet.transfer(amountToAdministration);
             ethTransferLastInvestors(currentRaisedEth);
