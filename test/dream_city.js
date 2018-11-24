@@ -147,16 +147,19 @@ var saleEthOne = 0.0001*decimal;
         // var getBuyToken = await contract.getBuyToken.call(buyEthOne, {from:accounts[5]});
         // console.log("getBuyToken.totalTokens", Number(getBuyToken[0]));
 
+        var averagePriceToken = await contract.averagePriceToken.call();
+        console.log("averagePriceToken", Number(averagePriceToken));
+
         await contract.buyTokens(accounts[1], {from:accounts[1], value: saleEthOne});
         //await contract.saleTokens(accounts[1], {from:accounts[1], value: saleEthOne});
         var mainInfoInvestor = await contract.investorMainInfo.call(accounts[1]);
         // console.log("refundEth", mainInfoInvestor.refundEth/decimal); //refundEth
         assert.equal(0, Number(mainInfoInvestor[2]));//amountToken
-        assert.equal(0.510705, mainInfoInvestor.refundEth/decimal);
+        assert.equal(0.5044, mainInfoInvestor.refundEth/decimal);
 
         var houseInfo = await contract.houseInfo.call(1);
         // console.log("houseInfo.refundEth", Number(houseInfo.refundEth/decimal));
-        assert.equal(0.56745, Number(houseInfo.refundEth/decimal));
+        assert.equal(0.5044, Number(houseInfo.refundEth/decimal));
 
         //await contract.buyTokens(accounts[2], {from:accounts[2], value: buyEthOne});
         mainInfoInvestor = await contract.investorMainInfo.call(accounts[2]);

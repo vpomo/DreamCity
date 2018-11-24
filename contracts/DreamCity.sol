@@ -462,12 +462,12 @@ contract HouseStorage is Ownable, InvestorStorage {
 
     function closeBuyTokens() internal returns(bool) {
         uint256 currentRaisedEth = getTotalEthPerHouse(currentHouse);
+        uint256 currentRaisedToken = getTotalTokenPerHouse(currentHouse);
 
         uint256 amountToAdministration = currentRaisedEth.mul(PERCENT_TO_ADMINISTRATION).div(100);
-        uint256 totalPercent = PERCENT_TO_ADMINISTRATION + PERCENT_TO_LAST_TEN_INVESTOR + PERCENT_TO_LAST_INVESTOR;
+        uint256 totalPercent = PERCENT_TO_ADMINISTRATION.add(PERCENT_TO_LAST_TEN_INVESTOR).add(PERCENT_TO_LAST_INVESTOR);
         uint256 transferEth = currentRaisedEth.mul(totalPercent).div(100);
-        uint256 freeEth = currentRaisedEth.sub(transferEth);
-        averagePriceToken = freeEth.div(getTotalTokenPerHouse(currentHouse));
+        averagePriceToken = currentRaisedEth.mul(80).div(100).div(currentRaisedToken);
         houses[currentHouse].stopTimeBuild = getCurrentDate();
         totalFloorBuilded = totalFloorBuilded.add(1);
 
@@ -610,7 +610,6 @@ contract HouseStorage is Ownable, InvestorStorage {
         require(currentHouse > 0);
         Investor storage inv = investors[_investor];
         uint256 refundEth = inv.amountToken.mul(averagePriceToken);
-        uint256 countStep = currentHouse.sub(inv.numberHouse);
         uint256 amountWallet = 0;
         uint256 prevHouse = currentHouse.sub(1);
         uint256 currentDay = getCurrentDate();
@@ -620,27 +619,18 @@ contract HouseStorage is Ownable, InvestorStorage {
         }
 
         if (address(this).balance > refundEth){ // for test's
-            if (countStep == 0) {
-                amountWallet = refundEth.mul(PERCENT_TO_WALLET).div(100);
-            } else {
-                if (0 < countStep && countStep < PERCENT_TO_WALLET) {
-                    countStep++;
-                    amountWallet = refundEth.mul(PERCENT_TO_WALLET).mul(countStep).div(100);
-                } else {
-                    amountWallet = refundEth;
-                }
-            }
+            amountWallet = refundEth.mul(PERCENT_TO_WALLET).div(100);
             houses[prevHouse].refundToken =  houses[prevHouse].refundToken.add(inv.amountToken);
             houses[prevHouse].refundEth =  houses[prevHouse].refundEth.add(refundEth);
             tokenAllocated = tokenAllocated.sub(inv.amountToken);
-            inv.refundEth = inv.refundEth.add(refundEth.sub(amountWallet));
-            emit TokenSale(_investor, _date, averagePriceToken, refundEth.sub(amountWallet), inv.amountToken);
+            inv.refundEth = inv.refundEth.add(refundEth);
+            emit TokenSale(_investor, _date, averagePriceToken, refundEth, inv.amountToken);
             inv.amountToken = 0;
             inv.sellTime = _date;
             totalRefundEth = totalRefundEth.add(refundEth);
 
             wallet.transfer(amountWallet); // for test's
-            _investor.transfer(refundEth.sub(amountWallet)); // for test's
+            _investor.transfer(refundEth); // for test's
         } // for test's
     }
 
