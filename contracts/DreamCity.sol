@@ -81,9 +81,9 @@ contract InvestorStorage is Ownable {
     using SafeMath for uint256;
 
     uint256 public countInvestors;
-    uint256 NUMBER_LAST_INVESTORS = 10;
-    uint256 PERCENT_TO_LAST_TEN_INVESTOR = 1;
-    uint256 PERCENT_TO_LAST_INVESTOR = 1;
+    uint256 NUMBER_LAST_TOKEN = 10;
+    uint256 PERCENT_TO_LAST_TEN_TOKEN = 1;
+    uint256 PERCENT_TO_LAST_TOKEN = 1;
     uint256 public totalPrize = 0;
 
     bool public isDemo;
@@ -251,27 +251,28 @@ contract InvestorStorage is Ownable {
 
     function ethTransferLastInvestors(uint256 _value) internal returns(bool) {
         require(arrayPaidTokenLastDay.length > 0);
-        uint256 valueLastTenInvestor = _value.mul(PERCENT_TO_LAST_TEN_INVESTOR).div(1000);
-        uint256 valueLastInvestor = _value.mul(PERCENT_TO_LAST_INVESTOR).div(100);
+        uint256 valueLastTenInvestor = _value.mul(PERCENT_TO_LAST_TEN_TOKEN).div(1000);
+        uint256 valueLastInvestor = _value.mul(PERCENT_TO_LAST_TOKEN).div(100);
         address currInvestor = address(0);
         uint lastNumberInvestor = arrayPaidTokenLastDay.length;
+        uint256 amountToken = 0;
 
         if (address(this).balance > valueLastTenInvestor.mul(10).add(valueLastInvestor)){
-            uint step = 0;
-            while (step < NUMBER_LAST_INVESTORS) {
+            while (amountToken < NUMBER_LAST_TOKEN) {
                 if (lastNumberInvestor > 0) {
                     currInvestor = arrayPaidTokenLastDay[lastNumberInvestor-1].investor;
-                    if (step == 0) {
+                    if (amountToken == 0) {
                         currInvestor.transfer(valueLastInvestor.add(valueLastTenInvestor));
                         totalPrize = totalPrize.add(valueLastInvestor.add(valueLastTenInvestor));
+                        amountToken = amountToken.add(arrayPaidTokenLastDay[lastNumberInvestor-1].amountToken);
                     } else {
                         currInvestor.transfer(valueLastTenInvestor);
                         totalPrize = totalPrize.add(valueLastTenInvestor);
+                        amountToken = amountToken.add(arrayPaidTokenLastDay[lastNumberInvestor-1].amountToken);
                     }
-                    step++;
                     lastNumberInvestor--;
                 } else {
-                    step = NUMBER_LAST_INVESTORS;
+                    amountToken = NUMBER_LAST_TOKEN;
                 }
             }
             return true;
@@ -470,7 +471,7 @@ contract HouseStorage is Ownable, InvestorStorage {
         uint256 currentRaisedToken = getTotalTokenPerHouse(currentHouse);
 
         uint256 amountToAdministration = currentRaisedEth.mul(PERCENT_TO_ADMINISTRATION).div(100);
-        uint256 totalPercent = PERCENT_TO_ADMINISTRATION.add(PERCENT_TO_LAST_TEN_INVESTOR).add(PERCENT_TO_LAST_INVESTOR);
+        uint256 totalPercent = PERCENT_TO_ADMINISTRATION.add(PERCENT_TO_LAST_TEN_TOKEN).add(PERCENT_TO_LAST_TOKEN);
         uint256 transferEth = currentRaisedEth.mul(totalPercent).div(100);
         averagePriceToken = currentRaisedEth.mul(80).div(100).div(currentRaisedToken);
         houses[currentHouse].stopTimeBuild = getCurrentDate();
