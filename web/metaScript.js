@@ -1,4 +1,4 @@
-var adrressContractRopsten = "0xb81b2531918abbea807d2ca764e5b011766ddcf4";
+var adrressContractRopsten = "0x98be2c870c967e5ffc21668e4c8d3108bed8077a";
 var adrressContractMain = "0xe4a60882c473e008b4e1c942bd73addf50483825";
 var contract;
 var SECUND_TO_DAY = 86400;
@@ -41,9 +41,12 @@ function startApp() {
             $('#totalEth').html(totalEth.toFixed(4));
 			
 			var totalPrizeLastInvestor = (totalEth * 1.1) / 100;
-			
 			$('#totalPrizeLastInvestor').html(totalPrizeLastInvestor.toFixed(4));
             console.log("totalPrizeLastInvestor = " + totalPrizeLastInvestor.toFixed(4));
+
+            var totalPrizeAllInvestor = (totalEth * 2) / 100;
+            $('#totalPrizeAllInvestor').html(totalPrizeAllInvestor.toFixed(4));
+            console.log("totalPrizeAllInvestor = " + totalPrizeAllInvestor.toFixed(4));
 
             var priceTokenNextHouse = totalEth / paymentTokenTotal;
 

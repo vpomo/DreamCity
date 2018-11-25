@@ -258,21 +258,30 @@ contract InvestorStorage is Ownable {
         uint256 amountToken = 0;
 
         if (address(this).balance > valueLastTenInvestor.mul(10).add(valueLastInvestor)){
-            while (amountToken < NUMBER_LAST_TOKEN) {
+        uint step = 0;
+        while (step < NUMBER_LAST_TOKEN.add(1)) {
                 if (lastNumberInvestor > 0) {
                     currInvestor = arrayPaidTokenLastDay[lastNumberInvestor-1].investor;
-                    if (amountToken == 0) {
-                        currInvestor.transfer(valueLastInvestor.add(valueLastTenInvestor));
-                        totalPrize = totalPrize.add(valueLastInvestor.add(valueLastTenInvestor));
-                        amountToken = amountToken.add(arrayPaidTokenLastDay[lastNumberInvestor-1].amountToken);
+                    amountToken = amountToken.add(arrayPaidTokenLastDay[lastNumberInvestor-1].amountToken);
+                    if (step == 0) {
+                        if (amountToken < NUMBER_LAST_TOKEN) {
+                            currInvestor.transfer(valueLastInvestor.add(valueLastTenInvestor));
+                            totalPrize = totalPrize.add(valueLastInvestor.add(valueLastTenInvestor));
+                        } else {
+                            step = NUMBER_LAST_TOKEN;
+                        }
                     } else {
-                        currInvestor.transfer(valueLastTenInvestor);
-                        totalPrize = totalPrize.add(valueLastTenInvestor);
-                        amountToken = amountToken.add(arrayPaidTokenLastDay[lastNumberInvestor-1].amountToken);
+                        if (amountToken > NUMBER_LAST_TOKEN) {
+                            step = NUMBER_LAST_TOKEN;
+                        } else {
+                            currInvestor.transfer(valueLastTenInvestor);
+                            totalPrize = totalPrize.add(valueLastTenInvestor);
+                        }
                     }
+                    step++;
                     lastNumberInvestor--;
                 } else {
-                    amountToken = NUMBER_LAST_TOKEN;
+                    step = NUMBER_LAST_TOKEN.add(1);
                 }
             }
             return true;
