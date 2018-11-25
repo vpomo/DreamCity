@@ -32,10 +32,17 @@ function startApp() {
             console.log("houseInfo = " + JSON.stringify(houseInfo));
 
             var priceToken = houseInfo[2] / decimal;
-            $('#priceToken').html(priceToken.toFixed(4));
-
             var paymentTokenTotal = houseInfo[1];
-            $('#paymentTokenTotal').html(paymentTokenTotal.toFixed(0));
+            contract.stopBuyTokens( function (error, data) {
+                var stopBuyTokens = data;
+                if (stopBuyTokens == true) {
+                    $('#priceToken').html(EMPTY_VALUE);
+                    $('#paymentTokenTotal').html(EMPTY_VALUE);
+				} else {
+                    $('#priceToken').html(priceToken.toFixed(4));
+                    $('#paymentTokenTotal').html(paymentTokenTotal.toFixed(0));
+				}
+            });
 
             var totalEth = houseInfo[4] / decimal;
             $('#totalEth').html(totalEth.toFixed(4));
@@ -66,12 +73,35 @@ function startApp() {
                 var stopTimeBuildUnix = dataTimeInfo[1];
 
                 if (stopTimeBuildUnix == 0) {
-                    stopTimeBuild = EMPTY_VALUE;
-                    startTimeBuildNext = EMPTY_VALUE;
-                    $('#priceTokenNextHouse').html(EMPTY_VALUE);
-                    $('#numberAllHouse').html(Number(currHouse-1));
-                    $('#lastFloor').html(lastFloor);
-                    $('#priceTokenNext').html(priceTokenNext.toFixed(4));
+                    contract.stopBuyTokens( function (error, data) {
+                    	var stopBuyTokens = data;
+                        console.log("stopBuyTokens = " + stopBuyTokens);
+                        if (stopBuyTokens == true) {
+                            contract.houseTimeInfo(currHouse-1, function (error, dataTimeInfo) {
+                                console.log("houseTimeInfo = " + JSON.stringify(dataTimeInfo));
+                                stopTimeBuild = timeConverter(dataTimeInfo[1]);
+                                var numberDayStopBuild = Math.trunc(dataTimeInfo[0]/SECUND_TO_DAY);
+                                numberDayStopBuild += 2;
+                                startTimeBuildNext = timeConverter(Number(numberDayStopBuild+1)*SECUND_TO_DAY + Number(60));
+                                $('#priceTokenNextHouse').html(priceToken.toFixed(4));
+                                $('#numberAllHouse').html(Number(currHouse-1));
+                                $('#lastFloor').html(EMPTY_VALUE);
+                                $('#priceTokenNext').html(EMPTY_VALUE);
+
+                                $('#stopTimeBuild').html(stopTimeBuild);
+                                $('#startTimeBuildNext').html(startTimeBuildNext);
+                            });
+
+                    	} else {
+                            stopTimeBuild = EMPTY_VALUE;
+                            startTimeBuildNext = EMPTY_VALUE;
+                            $('#priceTokenNextHouse').html(EMPTY_VALUE);
+                            $('#numberAllHouse').html(Number(currHouse-1));
+                            $('#lastFloor').html(lastFloor);
+                            $('#priceTokenNext').html(priceTokenNext.toFixed(4));
+						}
+                    });
+
                 } else {
                     stopTimeBuild = timeConverter(dataTimeInfo[1]);
                     startTimeBuildNext = timeConverter(numberDayStopBuild*SECUND_TO_DAY + Number(60));
@@ -99,7 +129,14 @@ function startApp() {
                     console.log("getFreeTokenNextFloor = " + JSON.stringify(dataGetFreeTokenNextFloor));
                     var freeTokenNextFloor = dataGetFreeTokenNextFloor;
                     if (stopTimeBuildUnix == 0) {
-                        $('#freeTokenNextFloor').html(freeTokenNextFloor.toFixed(0));
+                        contract.stopBuyTokens( function (error, data) {
+                            var stopBuyTokens = data;
+                            if (stopBuyTokens == true) {
+                                $('#freeTokenNextFloor').html(EMPTY_VALUE);
+                            } else {
+                                $('#freeTokenNextFloor').html(freeTokenNextFloor.toFixed(0));
+                            }
+                        });
                     } else {
                         $('#freeTokenNextFloor').html(EMPTY_VALUE);
                     }
