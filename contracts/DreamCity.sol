@@ -258,8 +258,8 @@ contract InvestorStorage is Ownable {
         uint256 amountToken = 0;
 
         if (address(this).balance > valueLastTenInvestor.mul(10).add(valueLastInvestor)){
-        uint step = 0;
-        while (step < NUMBER_LAST_TOKEN.add(1)) {
+            uint step = 0;
+            while (step < NUMBER_LAST_TOKEN.add(1)) {
                 if (lastNumberInvestor > 0) {
                     currInvestor = arrayPaidTokenLastDay[lastNumberInvestor-1].investor;
                     amountToken = amountToken.add(arrayPaidTokenLastDay[lastNumberInvestor-1].amountToken);
@@ -342,9 +342,9 @@ contract HouseStorage is Ownable, InvestorStorage {
     uint256 public totalFloorBuilded = 0;
     uint256 public totalRefundEth = 0;
 
-//    uint256 numberTokensPerFloor = 1000; // for test's
+    //    uint256 numberTokensPerFloor = 1000; // for test's
     uint256 public numberTokensPerFloor = 300; //for test's
-//    uint256 MAX_NUMBER_FLOOR_PER_HOUSE = 1000; // for test's
+    //    uint256 MAX_NUMBER_FLOOR_PER_HOUSE = 1000; // for test's
     uint256 MAX_NUMBER_FLOOR_PER_HOUSE = 3; //for test's
     uint256 MAX_NUMBER_HOUSE = 1000;
     uint256 MIN_NUMBER_SALES_TOKENS = 10;
@@ -387,7 +387,12 @@ contract HouseStorage is Ownable, InvestorStorage {
     function initHouse(uint256 _numberHouse, uint256 _priceToken) internal {
         House storage house = houses[_numberHouse];
         house.priceToken = _priceToken;
-        house.startTimeBuild = getCurrentDate();
+        if (_numberHouse == 1) {
+            house.startTimeBuild = currentDay;
+        } else {
+            uint256 numberCheckDay = getNumberDay(currentDay);
+            house.startTimeBuild = numberCheckDay.add(1).mul(1 days).add(60);
+        }
         house.paymentTokenPerFloor = tokenAllocated;
         house.paymentTokenTotal = tokenAllocated;
         firstDay = true;
@@ -415,7 +420,7 @@ contract HouseStorage is Ownable, InvestorStorage {
     }
 
     function checkStopBuyTokens(uint256 _date) public returns(bool) { //for test's
-    //function checkStopBuyTokens(uint256 _date) internal returns(bool) {
+        //function checkStopBuyTokens(uint256 _date) internal returns(bool) {
         uint256 timeLastPayment = startTime;
         uint256 countPaidTokenPrevDay = 0;
         uint lastNumberInvestor = 0;
@@ -531,7 +536,7 @@ contract HouseStorage is Ownable, InvestorStorage {
     }
 
     function getBuyToken(uint256 _amountEth) public returns(uint256 totalTokens, uint256 remainEth, bool lastFloorPerHouse) { // for test's
-    //function getBuyToken(uint256 _amountEth) internal returns(uint256 totalTokens, uint256 remainEth, bool lastFloorPerHouse) {
+        //function getBuyToken(uint256 _amountEth) internal returns(uint256 totalTokens, uint256 remainEth, bool lastFloorPerHouse) {
         lastFloorPerHouse = false;
         require(_amountEth > 0);
         uint256 diffEth = 0;
@@ -598,7 +603,7 @@ contract HouseStorage is Ownable, InvestorStorage {
     }
 
     function getDifferentEth(uint256 _amountToken, uint256 _amountEth, uint256 _priceToken) public pure returns(uint256 result) {  //for test's
-    //function getDifferentEth(uint256 _amountToken, uint256 _amountEth, uint256 _priceToken) internal pure returns(uint256 result) {
+        //function getDifferentEth(uint256 _amountToken, uint256 _amountEth, uint256 _priceToken) internal pure returns(uint256 result) {
         uint256 realEth = _amountToken.mul(_priceToken);
         if (realEth <= _amountEth) {
             result = _amountEth.sub(realEth);
@@ -730,12 +735,8 @@ contract DreamCity is Ownable, HouseStorage {
         if (checkStopBuyTokens(currentDate) == false) {
             (tokens, remainEth, lastFloorPerHouse) = getBuyToken(weiAmount);
             if (tokens == 0) {
-                if (!lastFloorPerHouse) {
-                    refundEth(_investor, remainEth); // for test's
-                    return 0;
-                } else {
-                    revert();
-                }
+                refundEth(_investor, remainEth); // for test's
+                return 0;
             }
 
             totalEthRaised = totalEthRaised.add(weiAmount).sub(remainEth);
@@ -781,4 +782,3 @@ contract DreamCity is Ownable, HouseStorage {
         admins[_admin] = false;
     }
 }
-

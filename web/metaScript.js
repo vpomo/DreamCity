@@ -1,4 +1,4 @@
-var adrressContractRopsten = "0x98be2c870c967e5ffc21668e4c8d3108bed8077a";
+var adrressContractRopsten = "0x8fcb31762f589dab445a2305bdee82bd53938e58";
 var adrressContractMain = "0xe4a60882c473e008b4e1c942bd73addf50483825";
 var contract;
 var SECUND_TO_DAY = 86400;
@@ -61,7 +61,7 @@ function startApp() {
                 console.log("houseTimeInfo = " + JSON.stringify(dataTimeInfo));
                 console.log("Math.trunc(dataTimeInfo[0]) = " + Math.trunc(dataTimeInfo[0]/SECUND_TO_DAY));
                 var numberDayStopBuild = Math.trunc(dataTimeInfo[0]/SECUND_TO_DAY);
-                numberDayStopBuild += 2;
+                //numberDayStopBuild += 2;
 
                 var startTimeBuild = timeConverter(Math.trunc(dataTimeInfo[0]/SECUND_TO_DAY)*SECUND_TO_DAY);
 
@@ -82,7 +82,7 @@ function startApp() {
                                 stopTimeBuild = timeConverter(dataTimeInfo[1]);
                                 var numberDayStopBuild = Math.trunc(dataTimeInfo[0]/SECUND_TO_DAY);
                                 numberDayStopBuild += 2;
-                                startTimeBuildNext = timeConverter(Number(numberDayStopBuild+1)*SECUND_TO_DAY + Number(60));
+                                startTimeBuildNext = timeConverter(Number(numberDayStopBuild)*SECUND_TO_DAY + Number(60));
                                 $('#priceTokenNextHouse').html(priceToken.toFixed(4));
                                 $('#numberAllHouse').html(Number(currHouse-1));
                                 $('#lastFloor').html(EMPTY_VALUE);
