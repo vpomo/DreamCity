@@ -456,6 +456,7 @@ contract HouseStorage is Ownable, InvestorStorage {
     }
 
     function toSecondFloorNewHouse() internal {
+        totalFloorBuilded = totalFloorBuilded.add(1);
         houses[currentHouse].lastFloor = houses[currentHouse].lastFloor.add(1);
         houses[currentHouse].paymentTokenTotal = tokenAllocated;
         numberTokensPerFloor = tokenAllocated;
