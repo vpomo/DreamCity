@@ -1,4 +1,4 @@
-var adrressContractRopsten = "0x8fcb31762f589dab445a2305bdee82bd53938e58";
+var adrressContractRopsten = "0x97ace63b614f820a5dcd57651830095a9367bf73";
 var adrressContractMain = "0xe4a60882c473e008b4e1c942bd73addf50483825";
 var contract;
 var SECUND_TO_DAY = 86400;
@@ -47,14 +47,6 @@ function startApp() {
             var totalEth = houseInfo[4] / decimal;
             $('#totalEth').html(totalEth.toFixed(4));
 			
-			var totalPrizeLastInvestor = (totalEth * 1.1) / 100;
-			$('#totalPrizeLastInvestor').html(totalPrizeLastInvestor.toFixed(4));
-            console.log("totalPrizeLastInvestor = " + totalPrizeLastInvestor.toFixed(4));
-
-            var totalPrizeAllInvestor = (totalEth * 2) / 100;
-            $('#totalPrizeAllInvestor').html(totalPrizeAllInvestor.toFixed(4));
-            console.log("totalPrizeAllInvestor = " + totalPrizeAllInvestor.toFixed(4));
-
             var priceTokenNextHouse = totalEth / paymentTokenTotal;
 
             contract.houseTimeInfo(currHouse, function (error, dataTimeInfo) {
@@ -73,6 +65,7 @@ function startApp() {
                 var stopTimeBuildUnix = dataTimeInfo[1];
 
                 if (stopTimeBuildUnix == 0) {
+                    console.log("stopTimeBuildUnix == 0");
                     contract.stopBuyTokens( function (error, data) {
                     	var stopBuyTokens = data;
                         console.log("stopBuyTokens = " + stopBuyTokens);
@@ -80,16 +73,23 @@ function startApp() {
                             contract.houseTimeInfo(currHouse-1, function (error, dataTimeInfo) {
                                 console.log("houseTimeInfo = " + JSON.stringify(dataTimeInfo));
                                 stopTimeBuild = timeConverter(dataTimeInfo[1]);
-                                var numberDayStopBuild = Math.trunc(dataTimeInfo[0]/SECUND_TO_DAY);
-                                numberDayStopBuild += 2;
+                                var numberDayStopBuild = Number(Math.trunc(dataTimeInfo[1]/SECUND_TO_DAY)+2);
                                 startTimeBuildNext = timeConverter(Number(numberDayStopBuild)*SECUND_TO_DAY + Number(60));
+                                startTimeBuild = timeConverter(Math.trunc(dataTimeInfo[0]/SECUND_TO_DAY)*SECUND_TO_DAY);
                                 $('#priceTokenNextHouse').html(priceToken.toFixed(4));
                                 $('#numberAllHouse').html(Number(currHouse-1));
                                 $('#lastFloor').html(EMPTY_VALUE);
                                 $('#priceTokenNext').html(EMPTY_VALUE);
+                                $('#totalPrizeLastInvestor').html(EMPTY_VALUE);
+                                $('#totalPrizeAllInvestor').html(EMPTY_VALUE);
 
                                 $('#stopTimeBuild').html(stopTimeBuild);
                                 $('#startTimeBuildNext').html(startTimeBuildNext);
+                                startTimeBuild = timeConverter(Math.trunc(dataTimeInfo[0]/SECUND_TO_DAY)*SECUND_TO_DAY);
+                                $('#startTimeBuild').html(startTimeBuild);
+
+                                console.log("startTimeBuild",startTimeBuild);
+                                console.log("stopTimeBuild",stopTimeBuild);
                             });
 
                     	} else {
@@ -99,10 +99,23 @@ function startApp() {
                             $('#numberAllHouse').html(Number(currHouse-1));
                             $('#lastFloor').html(lastFloor);
                             $('#priceTokenNext').html(priceTokenNext.toFixed(4));
-						}
+
+                            var totalPrizeLastInvestor = (totalEth * 1.1) / 100;
+                            $('#totalPrizeLastInvestor').html(totalPrizeLastInvestor.toFixed(4));
+                            console.log("totalPrizeLastInvestor = " + totalPrizeLastInvestor.toFixed(4));
+
+                            $('#stopTimeBuild').html(stopTimeBuild);
+                            $('#startTimeBuildNext').html(startTimeBuildNext);
+
+                            var totalPrizeAllInvestor = (totalEth * 2) / 100;
+                            $('#totalPrizeAllInvestor').html(totalPrizeAllInvestor.toFixed(4));
+                            console.log("totalPrizeAllInvestor = " + totalPrizeAllInvestor.toFixed(4));
+                            $('#startTimeBuild').html(startTimeBuild);
+                        }
                     });
 
                 } else {
+                    console.log("stopTimeBuildUnix > 0");
                     stopTimeBuild = timeConverter(dataTimeInfo[1]);
                     startTimeBuildNext = timeConverter(numberDayStopBuild*SECUND_TO_DAY + Number(60));
                     $('#priceTokenNextHouse').html(priceTokenNextHouse.toFixed(4));
@@ -111,9 +124,9 @@ function startApp() {
                     $('#priceTokenNext').html(EMPTY_VALUE);
                 }
 
-                $('#startTimeBuild').html(startTimeBuild);
-                $('#stopTimeBuild').html(stopTimeBuild);
-                $('#startTimeBuildNext').html(startTimeBuildNext);
+                // $('#startTimeBuild').html(startTimeBuild);
+                // $('#stopTimeBuild').html(stopTimeBuild);
+                // $('#startTimeBuildNext').html(startTimeBuildNext);
 
                 contract.getFreeTokenPerFloor(currHouse, function (error, dataGetFreeTokenPerFloor) {
                     console.log("getFreeTokenPerFloor = " + JSON.stringify(dataGetFreeTokenPerFloor));

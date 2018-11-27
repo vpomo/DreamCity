@@ -25,51 +25,49 @@ it('get address contract', async ()  => {
 });
 
 it('token purchase check', async ()  => {
-    await contract.setDemo(true); //Thu, 01 Nov 2018 10:01:20 GMT
-await contract.setStartDate(1541066400); //Thu, 01 Nov 2018 10:00:00 GMT
-await contract.setSimulateDate(1541066480); //Thu, 01 Nov 2018 10:01:20 GMT
+        await contract.setDemo(true); //Thu, 01 Nov 2018 10:01:20 GMT
+        await contract.setStartDate(1541066400); //Thu, 01 Nov 2018 10:00:00 GMT
+        await contract.setSimulateDate(1541066480); //Thu, 01 Nov 2018 10:01:20 GMT
 
-var stopBuyToken = await contract.checkStopBuyTokens.call(1541066480, {from:accounts[4]});
-assert.equal(false, stopBuyToken);
-//console.log("stopBuyToken", stopBuyToken);
+        var stopBuyToken = await contract.checkStopBuyTokens.call(1541066480, {from:accounts[4]});
+        assert.equal(false, stopBuyToken);
+        //console.log("stopBuyToken", stopBuyToken);
 
-await contract.buyTokens(accounts[1], {from:accounts[1], value: buyEthOne});
-var mainInfoInvestor = await contract.investorMainInfo.call(accounts[1]);
-assert.equal(0.6, mainInfoInvestor[0]/decimal); //investmentEth
-assert.equal(12, Number(mainInfoInvestor[2])); //amountToken
-assert.equal(0.6, mainInfoInvestor.investmentEth/decimal); //investmentEth
-assert.equal(12, Number(mainInfoInvestor.amountToken)); //amountToken
+        await contract.buyTokens(accounts[1], {from:accounts[1], value: buyEthOne});
+        var mainInfoInvestor = await contract.investorMainInfo.call(accounts[1]);
+        assert.equal(0.6, mainInfoInvestor[0]/decimal); //investmentEth
+        assert.equal(12, Number(mainInfoInvestor[2])); //amountToken
 
 
+        var houseInfo = await contract.houseInfo.call(1);
+        assert.equal(12, Number(houseInfo[0])); //paymentTokenPerFloor
+        assert.equal(12, Number(houseInfo[1])); //paymentTokenTotal
+        assert.equal(0.05, Number(houseInfo[2]/decimal)); //priceToken
+        assert.equal(12, Number(houseInfo[0])); //paymentTokenPerFloor
+        assert.equal(12, Number(houseInfo[1])); //paymentTokenTotal
+        assert.equal(0.05, Number(houseInfo[2]/decimal)); //priceToken
 
-var houseInfo = await contract.houseInfo.call(1);
-assert.equal(12, Number(houseInfo[0])); //paymentTokenPerFloor
-assert.equal(12, Number(houseInfo[1])); //paymentTokenTotal
-assert.equal(0.05, Number(houseInfo[2]/decimal)); //priceToken
-assert.equal(12, Number(houseInfo.paymentTokenPerFloor)); //paymentTokenPerFloor
-assert.equal(12, Number(houseInfo.paymentTokenTotal)); //paymentTokenTotal
-assert.equal(0.05, Number(houseInfo.priceToken/decimal)); //priceToken
+        await contract.buyTokens(accounts[2], {from:accounts[2], value: buyEthTwo});
+        mainInfoInvestor = await contract.investorMainInfo.call(accounts[2]);
+        assert.equal(1.2, mainInfoInvestor[0]/decimal); //investmentEth
+        assert.equal(24, Number(mainInfoInvestor[2])); //amountToken
 
-await contract.buyTokens(accounts[2], {from:accounts[2], value: buyEthTwo});
-mainInfoInvestor = await contract.investorMainInfo.call(accounts[2]);
-assert.equal(1.2, mainInfoInvestor[0]/decimal); //investmentEth
-assert.equal(24, Number(mainInfoInvestor[2])); //amountToken
-
-var houseInfo = await contract.houseInfo.call(1);
-assert.equal(36, Number(houseInfo.paymentTokenPerFloor)); //paymentTokenPerFloor
-assert.equal(36, Number(houseInfo.paymentTokenTotal)); //paymentTokenTotal
-assert.equal(0.05, Number(houseInfo.priceToken/decimal)); //priceToken
+        var houseInfo = await contract.houseInfo.call(1);
+        assert.equal(36, Number(houseInfo[0])); //paymentTokenPerFloor
+        assert.equal(36, Number(houseInfo[1])); //paymentTokenTotal
+        assert.equal(0.05, Number(houseInfo[2]/decimal)); //priceToken
 });
 
 
 it('check next floor', async ()  => {
     var houseInfo = await contract.houseInfo.call(1);
 
-assert.equal(36, Number(houseInfo.paymentTokenPerFloor));
-assert.equal(36, Number(houseInfo.paymentTokenTotal));
-assert.equal(0.05, Number(houseInfo.priceToken/decimal));
-assert.equal(0, Number(houseInfo.lastFloor));
-assert.equal(1.8, Number(houseInfo.totalEth/decimal));
+assert.equal(36, Number(houseInfo[0]));//paymentTokenPerFloor
+assert.equal(36, Number(houseInfo[1]));//paymentTokenTotal
+assert.equal(0.05, Number(houseInfo[2]/decimal));//priceToken
+assert.equal(0, Number(houseInfo[3]));//lastFloor
+assert.equal(1.8, Number(houseInfo[4]/decimal));//totalEth
+
 // console.log("paymentTokenPerFloor", Number(houseInfo[0]));
 // console.log("paymentTokenTotal", Number(houseInfo[1]));
 // console.log("priceToken", Number(houseInfo[2]/decimal));
@@ -79,15 +77,15 @@ var check = await contract.checkBuyTokenPerFloor.call(buyEthThree, {from:account
 //console.log("check", JSON.stringify(check));
 // console.log("checkBuyTokenPerFloor.tokens", Number(check.tokens));
 // console.log("checkBuyTokenPerFloor.needEth", Number(check.needEth/decimal));
-assert.equal(264, Number(check.tokens));
-assert.equal(13.2, Number(check.needEth/decimal));
+assert.equal(264, Number(check[0]));//tokens
+assert.equal(13.2, Number(check[1]/decimal));//needEth
 
 check = await contract.getBuyToken.call(buyEthThree, {from:accounts[4]});
 //console.log("check", JSON.stringify(check));
 // console.log("getBuyToken.totalTokens", Number(check.totalTokens));
 // console.log("getBuyToken.remainEth", Number(check.remainEth/decimal));
-assert.equal(864, Number(check.totalTokens));
-assert.equal(4.5125, Number(check.remainEth/decimal));
+assert.equal(864, Number(check[0]));//totalTokens
+assert.equal(4.5125, Number(check[1]/decimal));//remainEth
 
 var stopBuyToken = await contract.checkStopBuyTokens.call(1541066680, {from:accounts[4]});
 //console.log("stopBuyToken", stopBuyToken);
@@ -96,15 +94,15 @@ assert.equal(false, stopBuyToken);
 await contract.buyTokens(accounts[4], {from:accounts[4], value: buyEthThree});
 
 var mainInfoInvestor = await contract.investorMainInfo.call(accounts[4]);
-assert.equal(45.4875, mainInfoInvestor.investmentEth/decimal); //investmentEth
-assert.equal(864, Number(mainInfoInvestor.amountToken)); //amountToken
+assert.equal(45.4875, mainInfoInvestor[0]/decimal); //investmentEth
+assert.equal(864, Number(mainInfoInvestor[2])); //amountToken
 
 houseInfo = await contract.houseInfo.call(1);
-assert.equal(300, Number(houseInfo.paymentTokenPerFloor));
-assert.equal(900, Number(houseInfo.paymentTokenTotal));
-assert.equal(0.055125, Number(houseInfo.priceToken/decimal));
-assert.equal(2, Number(houseInfo.lastFloor));
-assert.equal(47.2875, Number(houseInfo.totalEth/decimal));
+assert.equal(300, Number(houseInfo[0]));//paymentTokenPerFloor
+assert.equal(900, Number(houseInfo[1]));//paymentTokenTotal
+assert.equal(0.055125, Number(houseInfo[2]/decimal));//priceToken
+assert.equal(2, Number(houseInfo[3]));//lastFloor
+assert.equal(47.2875, Number(houseInfo[4]/decimal));//totalEth
 
 });
 
@@ -114,9 +112,9 @@ it('check stop buy tokens last floor', async ()  => {
 assert.equal(47.2875, Number(currentRaisedEth/decimal));
 
 var getBuyToken = await contract.getBuyToken.call(buyEthOne, {from:accounts[5]});
-assert.equal(true, getBuyToken.lastFloorPerHouse);
-assert.equal(0, Number(getBuyToken.totalTokens));
-assert.equal(buyEthOne, Number(getBuyToken.remainEth));
+assert.equal(true, getBuyToken[2]);//lastFloorPerHouse
+assert.equal(0, Number(getBuyToken[0]));//totalTokens
+assert.equal(buyEthOne, Number(getBuyToken[1]));//remainEth
 
 getBuyToken = await contract.getBuyToken(buyEthOne, {from:accounts[5]});
 
@@ -153,22 +151,22 @@ await contract.buyTokens(accounts[1], {from:accounts[1], value: saleEthOne});
 var mainInfoInvestor = await contract.investorMainInfo.call(accounts[1]);
 // console.log("refundEth", mainInfoInvestor.refundEth/decimal); //refundEth
 assert.equal(0, Number(mainInfoInvestor[2]));//amountToken
-assert.equal(0.5044, mainInfoInvestor.refundEth/decimal);
+assert.equal(0.5044, mainInfoInvestor[1]/decimal);//refundEth
 
 var houseInfo = await contract.houseInfo.call(1);
 // console.log("houseInfo.refundEth", Number(houseInfo.refundEth/decimal));
-assert.equal(0.5044, Number(houseInfo.refundEth/decimal));
+assert.equal(0.5044, Number(houseInfo[5]/decimal));//refundEth
 
 //await contract.buyTokens(accounts[2], {from:accounts[2], value: buyEthOne});
 mainInfoInvestor = await contract.investorMainInfo.call(accounts[2]);
-assert.equal(24, Number(mainInfoInvestor.amountToken)); //amountToken
+assert.equal(24, Number(mainInfoInvestor[2])); //amountToken
 
 await contract.addToAdminlist(accounts[8]);
 await contract.buyTokens(accounts[8], {from:accounts[8], value: buyEthTwo});
 mainInfoInvestor = await contract.investorMainInfo.call(accounts[8]);
 // console.log("mainInfoInvestor.investmentEth", Number(mainInfoInvestor[0]/decimal));
 // console.log("mainInfoInvestor.amountToken", Number(mainInfoInvestor[2]));
-assert.equal(28, Number(mainInfoInvestor.amountToken)); //amountToken
+assert.equal(28, Number(mainInfoInvestor[2])); //amountToken
 });
 
 
@@ -182,15 +180,15 @@ assert.equal(false, stopBuyToken);
 
 houseInfo = await contract.houseInfo.call(2);
 // Amount token per floor
-assert.equal(916, Number(houseInfo.paymentTokenPerFloor));
-assert.equal(916, Number(houseInfo.paymentTokenTotal));
+assert.equal(916, Number(houseInfo[0]));//paymentTokenPerFloor
+assert.equal(916, Number(houseInfo[1]));//paymentTokenTotal
 
 await contract.buyTokens(accounts[6], {from:accounts[6], value: buyEthOne});
 
 var averagePriceToken = await contract.averagePriceToken.call();
 
 var houseInfo = await contract.houseInfo.call(2);
-var priceToken = houseInfo.priceToken;
+var priceToken = houseInfo[2];//priceToken
 assert.equal(44135000000000000, Number(priceToken));
 //console.log("priceToken", Number(priceToken), Number(averagePriceToken*1.05));
 
@@ -201,20 +199,20 @@ assert.equal(0.02624500000000001 ,Number(freeEth/decimal));
 var mainInfoInvestor = await contract.investorMainInfo.call(accounts[6]);
 // console.log("mainInfoInvestor.investmentEth", Number(mainInfoInvestor.investmentEth/decimal));
 // console.log("mainInfoInvestor.amountToken", Number(mainInfoInvestor.amountToken));
-assert.equal(0.573755, Number(mainInfoInvestor.investmentEth/decimal));
-assert.equal(13, Number(mainInfoInvestor.amountToken));
+assert.equal(0.573755, Number(mainInfoInvestor[0]/decimal));//investmentEth
+assert.equal(13, Number(mainInfoInvestor[2]));//amountToken
 
 houseInfo = await contract.houseInfo.call(2);
-// console.log("houseInfo.paymentTokenPerFloor", Number(houseInfo.paymentTokenPerFloor));
-// console.log("houseInfo.paymentTokenTotal", Number(houseInfo.paymentTokenTotal));
-// console.log("houseInfo.priceToken", Number(houseInfo.priceToken/decimal));
-// console.log("houseInfo.lastFloor", Number(houseInfo.lastFloor));
-// console.log("houseInfo.totalEth", Number(houseInfo.totalEth/decimal));
+// console.log("houseInfo.paymentTokenPerFloor", Number(houseInfo[0]));
+// console.log("houseInfo.paymentTokenTotal", Number(houseInfo[1]));
+// console.log("houseInfo.priceToken", Number(houseInfo[2]/decimal));
+// console.log("houseInfo.lastFloor", Number(houseInfo[3]));
+// console.log("houseInfo.totalEth", Number(houseInfo[4]/decimal));
 
-assert.equal(13, Number(houseInfo.paymentTokenPerFloor));
-assert.equal(929, Number(houseInfo.paymentTokenTotal));
-assert.equal(priceToken/decimal, Number(houseInfo.priceToken/decimal));
-assert.equal(1, Number(houseInfo.lastFloor));
+assert.equal(13, Number(houseInfo[0]));//paymentTokenPerFloor
+assert.equal(929, Number(houseInfo[1]));//paymentTokenTotal
+assert.equal(priceToken/decimal, Number(houseInfo[2]/decimal));//priceToken
+assert.equal(1, Number(houseInfo[3]));//lastFloor
 
 var amountTokenLastDay = await contract.getAmountTokenLastDay.call();
 assert.equal(13, Number(amountTokenLastDay));
@@ -248,8 +246,8 @@ var mainInfoInvestor = await contract.investorMainInfo.call(accounts[9]);
 // console.log("mainInfoInvestor.amountToken", Number(mainInfoInvestor.amountToken));
 assert.equal(12, Number(mainInfoInvestor[2]));//amountToken
 houseInfo = await contract.houseInfo.call(2);
-assert.equal(2, Number(houseInfo.lastFloor));//lastFloor
-assert.equal(1844, Number(houseInfo.paymentTokenTotal));//paymentTokenTotal
+assert.equal(2, Number(houseInfo[3]));//lastFloor
+assert.equal(1844, Number(houseInfo[1]));//paymentTokenTotal
 
 });
 

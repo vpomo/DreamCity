@@ -1,4 +1,4 @@
-pragma solidity ^0.4.25;
+pragma solidity ^0.4.24;
 
 
 library SafeMath {
@@ -264,18 +264,16 @@ contract InvestorStorage is Ownable {
                     currInvestor = arrayPaidTokenLastDay[lastNumberInvestor-1].investor;
                     amountToken = amountToken.add(arrayPaidTokenLastDay[lastNumberInvestor-1].amountToken);
                     if (step == 0) {
-                        if (amountToken < NUMBER_LAST_TOKEN) {
-                            currInvestor.transfer(valueLastInvestor.add(valueLastTenInvestor));
-                            totalPrize = totalPrize.add(valueLastInvestor.add(valueLastTenInvestor));
-                        } else {
+                        currInvestor.transfer(valueLastInvestor.add(valueLastTenInvestor));
+                        totalPrize = totalPrize.add(valueLastInvestor.add(valueLastTenInvestor));
+                        if (amountToken > NUMBER_LAST_TOKEN) {
                             step = NUMBER_LAST_TOKEN;
                         }
                     } else {
+                        currInvestor.transfer(valueLastTenInvestor);
+                        totalPrize = totalPrize.add(valueLastTenInvestor);
                         if (amountToken > NUMBER_LAST_TOKEN) {
                             step = NUMBER_LAST_TOKEN;
-                        } else {
-                            currInvestor.transfer(valueLastTenInvestor);
-                            totalPrize = totalPrize.add(valueLastTenInvestor);
                         }
                     }
                     step++;
@@ -343,7 +341,7 @@ contract HouseStorage is Ownable, InvestorStorage {
     uint256 public totalRefundEth = 0;
 
     //    uint256 numberTokensPerFloor = 1000; // for test's
-    uint256 public numberTokensPerFloor = 300; //for test's
+    uint256 public numberTokensPerFloor = 50; //for test's
     //    uint256 MAX_NUMBER_FLOOR_PER_HOUSE = 1000; // for test's
     uint256 MAX_NUMBER_FLOOR_PER_HOUSE = 3; //for test's
     uint256 MAX_NUMBER_HOUSE = 1000;
@@ -387,6 +385,7 @@ contract HouseStorage is Ownable, InvestorStorage {
     function initHouse(uint256 _numberHouse, uint256 _priceToken) internal {
         House storage house = houses[_numberHouse];
         house.priceToken = _priceToken;
+        uint256 currentDay = getCurrentDate();
         if (_numberHouse == 1) {
             house.startTimeBuild = currentDay;
         } else {
@@ -437,17 +436,13 @@ contract HouseStorage is Ownable, InvestorStorage {
 
         if (stopBuyTokens == false) {
             if (!firstDay) {
-                if (countPaidTokenPrevDay < MIN_NUMBER_SALES_TOKENS || houses[currentHouse].lastFloor.add(1) >= MAX_NUMBER_FLOOR_PER_HOUSE) {
-                    makeStopBuyTokens(_date);
-                }
-            } else {
-                if (paidPerDay[numberCheckDay] == numberTokensPerFloor.mul(MAX_NUMBER_FLOOR_PER_HOUSE)) {
-                    makeStopBuyTokens(_date);
+                if (countPaidTokenPrevDay < MIN_NUMBER_SALES_TOKENS) {
+                    makeStopBuyTokens();
                 }
             }
         } else {
             uint256 numberStartBuildHouse = getNumberDay(houses[currentHouse].startTimeBuild);
-            if (numberCheckDay.sub(numberStartBuildHouse) == 2) {
+            if (currentHouse > 1 && numberStartBuildHouse < numberCheckDay) {
                 stopBuyTokens = false;
                 toSecondFloorNewHouse();
             }
@@ -464,10 +459,9 @@ contract HouseStorage is Ownable, InvestorStorage {
         houses[currentHouse].priceToken = averagePriceToken.mul(TOKENS_COST_INCREASE_RATIO).div(100);
     }
 
-    function makeStopBuyTokens(uint256 _date) internal {
+    function makeStopBuyTokens() internal {
         stopBuyTokens = true;
         closeBuyTokens();
-        emit StopBuyTokens(_date);
     }
 
     function isOneDay(uint256 _date) public view returns(bool result) {
@@ -502,6 +496,7 @@ contract HouseStorage is Ownable, InvestorStorage {
             ethTransferLastInvestors(currentRaisedEth);
             return true;
         }
+        emit StopBuyTokens(getCurrentDate());
         return false;
     }
 
@@ -566,6 +561,10 @@ contract HouseStorage is Ownable, InvestorStorage {
                 stopBuyTokens = true;
                 closeBuyTokens();
             } else {
+                lastFloor = houses[currentHouse].lastFloor.add(1) >= MAX_NUMBER_FLOOR_PER_HOUSE;
+                if (lastFloor) {
+                    lastFloorPerHouse = true;
+                }
                 freeEth = _amountEth;
                 totalTokens = 0;
             }
