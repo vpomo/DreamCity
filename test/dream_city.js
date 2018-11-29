@@ -151,11 +151,11 @@ await contract.buyTokens(accounts[1], {from:accounts[1], value: saleEthOne});
 var mainInfoInvestor = await contract.investorMainInfo.call(accounts[1]);
 // console.log("refundEth", mainInfoInvestor.refundEth/decimal); //refundEth
 assert.equal(0, Number(mainInfoInvestor[2]));//amountToken
-assert.equal(0.5044, mainInfoInvestor[1]/decimal);//refundEth
+assert.equal(0.504, mainInfoInvestor[1]/decimal);//refundEth
 
 var houseInfo = await contract.houseInfo.call(1);
 // console.log("houseInfo.refundEth", Number(houseInfo.refundEth/decimal));
-assert.equal(0.5044, Number(houseInfo[5]/decimal));//refundEth
+assert.equal(0.504, Number(houseInfo[5]/decimal));//refundEth
 
 //await contract.buyTokens(accounts[2], {from:accounts[2], value: buyEthOne});
 mainInfoInvestor = await contract.investorMainInfo.call(accounts[2]);
@@ -180,8 +180,8 @@ assert.equal(false, stopBuyToken);
 
 houseInfo = await contract.houseInfo.call(2);
 // Amount token per floor
-assert.equal(916, Number(houseInfo[0]));//paymentTokenPerFloor
-assert.equal(916, Number(houseInfo[1]));//paymentTokenTotal
+assert.equal(888, Number(houseInfo[0]));//paymentTokenPerFloor
+assert.equal(888, Number(houseInfo[1]));//paymentTokenTotal
 
 await contract.buyTokens(accounts[6], {from:accounts[6], value: buyEthOne});
 
