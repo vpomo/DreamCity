@@ -1,4 +1,4 @@
-var adrressContractRopsten = "0x97ace63b614f820a5dcd57651830095a9367bf73";
+var adrressContractRopsten = "0xcb168e54ca95dc0a8ac677611f335841be01c7d0";
 var adrressContractMain = "0xe4a60882c473e008b4e1c942bd73addf50483825";
 var contract;
 var SECUND_TO_DAY = 86400;
@@ -131,11 +131,15 @@ function startApp() {
                 contract.getFreeTokenPerFloor(currHouse, function (error, dataGetFreeTokenPerFloor) {
                     console.log("getFreeTokenPerFloor = " + JSON.stringify(dataGetFreeTokenPerFloor));
                     var freeTokenPerFloor = dataGetFreeTokenPerFloor;
-                    if (stopTimeBuildUnix == 0) {
-                        $('#freeTokenPerFloor').html(freeTokenPerFloor.toFixed(0));
-					} else {
-                        $('#freeTokenPerFloor').html(EMPTY_VALUE);
-                    }
+                    contract.stopBuyTokens( function (error, data) {
+                        var stopBuyTokens = data;
+                        console.log("stopBuyTokens = " + stopBuyTokens);
+                        if (stopBuyTokens == true) {
+                            $('#freeTokenPerFloor').html(EMPTY_VALUE);
+                        } else {
+                            $('#freeTokenPerFloor').html(freeTokenPerFloor.toFixed(0));
+                        }
+                    });
                 });
 
                 contract.getFreeTokenNextFloor(function (error, dataGetFreeTokenNextFloor) {
@@ -286,6 +290,114 @@ function initContract() {
 
     var abiContract = [
         {
+            "constant": true,
+            "inputs": [],
+            "name": "averagePriceToken",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "simulateDate",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "percentToLastRemainingToken",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "numberTokensPerFloor",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [
+                {
+                    "name": "_numberHouse",
+                    "type": "uint256"
+                }
+            ],
+            "name": "getFreeTokenPerFloor",
+            "outputs": [
+                {
+                    "name": "tokens",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "_date",
+                    "type": "uint256"
+                }
+            ],
+            "name": "checkStopBuyTokens",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "bool"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "stopBuyTokens",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "bool"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
             "constant": false,
             "inputs": [
                 {
@@ -293,10 +405,24 @@ function initContract() {
                     "type": "address"
                 }
             ],
-            "name": "addToAdminlist",
+            "name": "removeFromAdminlist",
             "outputs": [],
             "payable": false,
             "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "amountLastToken",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
             "type": "function"
         },
         {
@@ -307,15 +433,519 @@ function initContract() {
                     "type": "address"
                 }
             ],
-            "name": "buyTokens",
+            "name": "saleTokens",
+            "outputs": [],
+            "payable": true,
+            "stateMutability": "payable",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [
+                {
+                    "name": "_investor",
+                    "type": "address"
+                }
+            ],
+            "name": "investorMainInfo",
+            "outputs": [
+                {
+                    "name": "investmentEth",
+                    "type": "uint256"
+                },
+                {
+                    "name": "refundEth",
+                    "type": "uint256"
+                },
+                {
+                    "name": "amountToken",
+                    "type": "uint256"
+                },
+                {
+                    "name": "numberHouse",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "totalFloorBuilded",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "countInvestors",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "maxBuyTokenToAdministration",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "name": "paidPerDay",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "minNumberSalesTokens",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "_percent",
+                    "type": "uint256"
+                }
+            ],
+            "name": "setPercentToLastToken",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "_number",
+                    "type": "uint256"
+                }
+            ],
+            "name": "setNumberTokensPerFloor",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "_amount",
+                    "type": "uint256"
+                }
+            ],
+            "name": "setMaxBuyTokenToAdministration",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "_number",
+                    "type": "uint256"
+                }
+            ],
+            "name": "setMaxNumberFloorPerHouse",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "getFreeTokenNextFloor",
             "outputs": [
                 {
                     "name": "tokens",
                     "type": "uint256"
                 }
             ],
-            "payable": true,
-            "stateMutability": "payable",
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "wallet",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "getAmountTokenLastDayIfLessTen",
+            "outputs": [
+                {
+                    "name": "amountTokenLastDayIfLessTen",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "getPriceTokenNextHouse",
+            "outputs": [
+                {
+                    "name": "result",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [
+                {
+                    "name": "_numberHouse",
+                    "type": "uint256"
+                }
+            ],
+            "name": "houseInfo",
+            "outputs": [
+                {
+                    "name": "paymentTokenPerFloor",
+                    "type": "uint256"
+                },
+                {
+                    "name": "paymentTokenTotal",
+                    "type": "uint256"
+                },
+                {
+                    "name": "priceToken",
+                    "type": "uint256"
+                },
+                {
+                    "name": "lastFloor",
+                    "type": "uint256"
+                },
+                {
+                    "name": "totalEth",
+                    "type": "uint256"
+                },
+                {
+                    "name": "refundEth",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "tokensCostIncreaseRatio",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "maxNumberFloorPerHouse",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [
+                {
+                    "name": "_numberHouse",
+                    "type": "uint256"
+                }
+            ],
+            "name": "getTotalTokenPerHouse",
+            "outputs": [
+                {
+                    "name": "tokens",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "currentHouse",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "getTimeLastInvestor",
+            "outputs": [
+                {
+                    "name": "lastTimePaid",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "startTime",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "tokenAllocated",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [],
+            "name": "setDemo",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "totalPrize",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "_newDate",
+                    "type": "uint256"
+                }
+            ],
+            "name": "setStartDate",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "percentToAdministration",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "_newDate",
+                    "type": "uint256"
+                }
+            ],
+            "name": "setSimulateDate",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "_number",
+                    "type": "uint256"
+                }
+            ],
+            "name": "setMinNumberSalesTokens",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "owner",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "getCurrentDate",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "_percent",
+                    "type": "uint256"
+                }
+            ],
+            "name": "setPercentToAdministration",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "totalEthPerHouse",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "totalRefundEth",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
             "type": "function"
         },
         {
@@ -336,19 +966,158 @@ function initContract() {
             "constant": false,
             "inputs": [
                 {
+                    "name": "_percent",
+                    "type": "uint256"
+                }
+            ],
+            "name": "setPercentToWallet",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [
+                {
+                    "name": "_amountEth",
+                    "type": "uint256"
+                }
+            ],
+            "name": "checkBuyTokenPerFloor",
+            "outputs": [
+                {
+                    "name": "tokens",
+                    "type": "uint256"
+                },
+                {
+                    "name": "needEth",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [
+                {
+                    "name": "_numberHouse",
+                    "type": "uint256"
+                }
+            ],
+            "name": "getTotalEthPerHouse",
+            "outputs": [
+                {
+                    "name": "eths",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "percentToLastToken",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "_newWallet",
+                    "type": "address"
+                }
+            ],
+            "name": "setAdministrationWallet",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [
+                {
                     "name": "_date",
                     "type": "uint256"
                 }
             ],
-            "name": "checkStopBuyTokens",
+            "name": "getNumberDay",
             "outputs": [
                 {
-                    "name": "",
-                    "type": "bool"
+                    "name": "result",
+                    "type": "uint256"
                 }
             ],
             "payable": false,
-            "stateMutability": "nonpayable",
+            "stateMutability": "pure",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "totalEthRaised",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [
+                {
+                    "name": "_amountToken",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_amountEth",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_priceToken",
+                    "type": "uint256"
+                }
+            ],
+            "name": "getDifferentEth",
+            "outputs": [
+                {
+                    "name": "result",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "pure",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "administrationWallet",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
             "type": "function"
         },
         {
@@ -379,6 +1148,48 @@ function initContract() {
             "type": "function"
         },
         {
+            "constant": true,
+            "inputs": [],
+            "name": "isDemo",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "bool"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "_ratio",
+                    "type": "uint256"
+                }
+            ],
+            "name": "setTokensCostIncreaseRatio",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "_newWallet",
+                    "type": "address"
+                }
+            ],
+            "name": "setWallet",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
             "constant": false,
             "inputs": [
                 {
@@ -402,17 +1213,82 @@ function initContract() {
             "type": "function"
         },
         {
-            "constant": false,
+            "constant": true,
             "inputs": [
                 {
-                    "name": "_admin",
+                    "name": "_numberHouse",
+                    "type": "uint256"
+                }
+            ],
+            "name": "houseTimeInfo",
+            "outputs": [
+                {
+                    "name": "startTimeBuild",
+                    "type": "uint256"
+                },
+                {
+                    "name": "stopTimeBuild",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "getAmountTokenLastDay",
+            "outputs": [
+                {
+                    "name": "amountTokenLastDay",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [
+                {
+                    "name": "_numberDay",
+                    "type": "uint256"
+                }
+            ],
+            "name": "getPaidPerDay",
+            "outputs": [
+                {
+                    "name": "result",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [
+                {
+                    "name": "_investor",
                     "type": "address"
                 }
             ],
-            "name": "removeFromAdminlist",
-            "outputs": [],
+            "name": "investorTimeInfo",
+            "outputs": [
+                {
+                    "name": "paymentTime",
+                    "type": "uint256"
+                },
+                {
+                    "name": "sellTime",
+                    "type": "uint256"
+                }
+            ],
             "payable": false,
-            "stateMutability": "nonpayable",
+            "stateMutability": "view",
             "type": "function"
         },
         {
@@ -423,52 +1299,98 @@ function initContract() {
                     "type": "address"
                 }
             ],
-            "name": "saleTokens",
-            "outputs": [],
+            "name": "buyTokens",
+            "outputs": [
+                {
+                    "name": "tokens",
+                    "type": "uint256"
+                }
+            ],
             "payable": true,
             "stateMutability": "payable",
             "type": "function"
         },
         {
-            "constant": false,
+            "constant": true,
             "inputs": [
                 {
-                    "name": "_status",
-                    "type": "bool"
+                    "name": "index",
+                    "type": "uint256"
                 }
             ],
-            "name": "setDemo",
-            "outputs": [],
+            "name": "getMemberArrayPaidTokenLastDay",
+            "outputs": [
+                {
+                    "name": "investor",
+                    "type": "address"
+                },
+                {
+                    "name": "amountToken",
+                    "type": "uint256"
+                },
+                {
+                    "name": "paymentTime",
+                    "type": "uint256"
+                }
+            ],
             "payable": false,
-            "stateMutability": "nonpayable",
+            "stateMutability": "view",
             "type": "function"
         },
         {
             "constant": false,
             "inputs": [
                 {
-                    "name": "_newDate",
-                    "type": "uint256"
+                    "name": "_admin",
+                    "type": "address"
                 }
             ],
-            "name": "setSimulateDate",
+            "name": "addToAdminlist",
             "outputs": [],
             "payable": false,
             "stateMutability": "nonpayable",
             "type": "function"
         },
         {
-            "constant": false,
-            "inputs": [
+            "constant": true,
+            "inputs": [],
+            "name": "percentToWallet",
+            "outputs": [
                 {
-                    "name": "_newDate",
+                    "name": "",
                     "type": "uint256"
                 }
             ],
-            "name": "setStartDate",
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [
+                {
+                    "name": "_percent",
+                    "type": "uint256"
+                }
+            ],
+            "name": "setPercentToLastRemainingToken",
             "outputs": [],
             "payable": false,
             "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "totalTokenRaised",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
             "type": "function"
         },
         {
@@ -566,6 +1488,28 @@ function initContract() {
                 }
             ],
             "name": "RefundEth",
+            "type": "event"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": true,
+                    "name": "owner",
+                    "type": "address"
+                },
+                {
+                    "indexed": true,
+                    "name": "newAddress",
+                    "type": "address"
+                },
+                {
+                    "indexed": true,
+                    "name": "oldAddress",
+                    "type": "address"
+                }
+            ],
+            "name": "ChangeAddressWallet",
             "type": "event"
         },
         {
@@ -689,668 +1633,6 @@ function initContract() {
             ],
             "name": "OwnerChanged",
             "type": "event"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "administrationWallet",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "averagePriceToken",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [
-                {
-                    "name": "_amountEth",
-                    "type": "uint256"
-                }
-            ],
-            "name": "checkBuyTokenPerFloor",
-            "outputs": [
-                {
-                    "name": "tokens",
-                    "type": "uint256"
-                },
-                {
-                    "name": "needEth",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "countInvestors",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "currentHouse",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "getAmountTokenLastDay",
-            "outputs": [
-                {
-                    "name": "amountTokenLastDay",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "getAmountTokenLastDayIfLessTen",
-            "outputs": [
-                {
-                    "name": "amountTokenLastDayIfLessTen",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "getCurrentDate",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [
-                {
-                    "name": "_amountToken",
-                    "type": "uint256"
-                },
-                {
-                    "name": "_amountEth",
-                    "type": "uint256"
-                },
-                {
-                    "name": "_priceToken",
-                    "type": "uint256"
-                }
-            ],
-            "name": "getDifferentEth",
-            "outputs": [
-                {
-                    "name": "result",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "pure",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "getFreeTokenNextFloor",
-            "outputs": [
-                {
-                    "name": "tokens",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [
-                {
-                    "name": "_numberHouse",
-                    "type": "uint256"
-                }
-            ],
-            "name": "getFreeTokenPerFloor",
-            "outputs": [
-                {
-                    "name": "tokens",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [
-                {
-                    "name": "index",
-                    "type": "uint256"
-                }
-            ],
-            "name": "getMemberArrayPaidTokenLastDay",
-            "outputs": [
-                {
-                    "name": "investor",
-                    "type": "address"
-                },
-                {
-                    "name": "amountToken",
-                    "type": "uint256"
-                },
-                {
-                    "name": "paymentTime",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [
-                {
-                    "name": "_date",
-                    "type": "uint256"
-                }
-            ],
-            "name": "getNumberDay",
-            "outputs": [
-                {
-                    "name": "result",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "pure",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [
-                {
-                    "name": "_numberDay",
-                    "type": "uint256"
-                }
-            ],
-            "name": "getPaidPerDay",
-            "outputs": [
-                {
-                    "name": "result",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "getPriceTokenNextHouse",
-            "outputs": [
-                {
-                    "name": "result",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "getTimeLastInvestor",
-            "outputs": [
-                {
-                    "name": "lastTimePaid",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [
-                {
-                    "name": "_numberHouse",
-                    "type": "uint256"
-                }
-            ],
-            "name": "getTotalEthPerHouse",
-            "outputs": [
-                {
-                    "name": "eths",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [
-                {
-                    "name": "_numberHouse",
-                    "type": "uint256"
-                }
-            ],
-            "name": "getTotalTokenPerHouse",
-            "outputs": [
-                {
-                    "name": "tokens",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [
-                {
-                    "name": "_numberHouse",
-                    "type": "uint256"
-                }
-            ],
-            "name": "houseInfo",
-            "outputs": [
-                {
-                    "name": "paymentTokenPerFloor",
-                    "type": "uint256"
-                },
-                {
-                    "name": "paymentTokenTotal",
-                    "type": "uint256"
-                },
-                {
-                    "name": "priceToken",
-                    "type": "uint256"
-                },
-                {
-                    "name": "lastFloor",
-                    "type": "uint256"
-                },
-                {
-                    "name": "totalEth",
-                    "type": "uint256"
-                },
-                {
-                    "name": "refundEth",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [
-                {
-                    "name": "_numberHouse",
-                    "type": "uint256"
-                }
-            ],
-            "name": "houseTimeInfo",
-            "outputs": [
-                {
-                    "name": "startTimeBuild",
-                    "type": "uint256"
-                },
-                {
-                    "name": "stopTimeBuild",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [
-                {
-                    "name": "_investor",
-                    "type": "address"
-                }
-            ],
-            "name": "investorMainInfo",
-            "outputs": [
-                {
-                    "name": "investmentEth",
-                    "type": "uint256"
-                },
-                {
-                    "name": "refundEth",
-                    "type": "uint256"
-                },
-                {
-                    "name": "amountToken",
-                    "type": "uint256"
-                },
-                {
-                    "name": "numberHouse",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [
-                {
-                    "name": "_investor",
-                    "type": "address"
-                }
-            ],
-            "name": "investorTimeInfo",
-            "outputs": [
-                {
-                    "name": "paymentTime",
-                    "type": "uint256"
-                },
-                {
-                    "name": "sellTime",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "isDemo",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "bool"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [
-                {
-                    "name": "_date",
-                    "type": "uint256"
-                }
-            ],
-            "name": "isOneDay",
-            "outputs": [
-                {
-                    "name": "result",
-                    "type": "bool"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "numberTokensPerFloor",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "owner",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [
-                {
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "name": "paidPerDay",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "simulateDate",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "startTime",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "stopBuyTokens",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "bool"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "tokenAllocated",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "totalEthPerHouse",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "totalEthRaised",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "totalFloorBuilded",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "totalPrize",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "totalRefundEth",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "totalTokenRaised",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "wallet",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
         }
     ];
 
