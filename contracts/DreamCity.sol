@@ -50,6 +50,7 @@ library SafeMath {
  */
 contract Ownable {
     address public owner;
+    address public ownerTwo;
 
     event OwnerChanged(address indexed previousOwner, address indexed newOwner);
 
@@ -57,7 +58,7 @@ contract Ownable {
      * @dev Throws if called by any account other than the owner.
      */
     modifier onlyOwner() {
-        require(msg.sender == owner);
+        require(msg.sender == owner || msg.sender == ownerTwo);
         _;
     }
 
@@ -70,6 +71,16 @@ contract Ownable {
         require(_newOwner != address(0));
         emit OwnerChanged(owner, _newOwner);
         owner = _newOwner;
+    }
+
+    /**
+     * @dev Allows the current owner to transfer control of the contract to a newOwner.
+     * @param _newOwner The address to transfer ownership to.
+     */
+    function changeOwnerTwo(address _newOwner) onlyOwner public {
+        require(_newOwner != address(0));
+        emit OwnerChanged(ownerTwo, _newOwner);
+        ownerTwo = _newOwner;
     }
 
 }
@@ -338,7 +349,7 @@ contract HouseStorage is Ownable, InvestorStorage {
 
     uint256 MAX_NUMBER_HOUSE = 1000;
 
-    uint256 public numberTokensPerFloor = 300; //for test's
+    uint256 public numberTokensPerFloor = 50; //for test's
     uint256 public maxNumberFloorPerHouse = 3; //for test's
     uint256 public minNumberSalesTokens = 10;
     uint256 public tokensCostIncreaseRatio = 105;
@@ -470,7 +481,7 @@ contract HouseStorage is Ownable, InvestorStorage {
         uint256 transferEth = currentRaisedEth.mul(totalPercent).div(fullPercent);
         uint256 percentToInvestor = fullPercent.sub(totalPercent.add(percentToWallet));
         averagePriceToken = currentRaisedEth.mul(percentToInvestor).div(fullPercent).div(currentRaisedToken);
-//        averagePriceToken = roundPrice(averagePriceToken, 3); //for test's
+        averagePriceToken = roundPrice(averagePriceToken, 3); //for test's
         houses[currentHouse].stopTimeBuild = getCurrentDate();
         totalFloorBuilded = totalFloorBuilded.add(1);
 
@@ -704,15 +715,17 @@ contract DreamCity is Ownable, HouseStorage {
     event ChangeAddressWallet(address indexed owner, address indexed newAddress, address indexed oldAddress);
 
 
-    constructor(address _owner, address _administrationWallet, address _wallet) public
+    constructor(address _owner, address _ownerTwo, address _administrationWallet, address _wallet) public
     {
         require(_owner != address(0));
+        require(_ownerTwo != address(0));
         require(_administrationWallet != address(0));
         require(_wallet != address(0));
         owner = _owner;
+        ownerTwo = _ownerTwo;
         administrationWallet = _administrationWallet;
         wallet = _wallet;
-        owner = msg.sender; // for test's
+        //owner = msg.sender; // for test's
         averagePriceToken = FIRST_PRICE_TOKEN;
         currentHouse = 1;
         addToAdminlist(administrationWallet);
