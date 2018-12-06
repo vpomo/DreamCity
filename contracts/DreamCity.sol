@@ -361,6 +361,7 @@ contract HouseStorage is Ownable, InvestorStorage {
     address public wallet;
 
     bool public stopBuyTokens;
+    bool public finishProject;
     bool firstDay = false;
 
     uint256 public currentHouse;
@@ -385,8 +386,9 @@ contract HouseStorage is Ownable, InvestorStorage {
 
     constructor() public {
         stopBuyTokens = false;
-        startTime = 0;
-        simulateDate = 0;
+        finishProject = false;
+        startTime = now; //for test's
+        simulateDate = startTime;
     }
 
     function initHouse(uint256 _numberHouse, uint256 _priceToken) internal {
@@ -458,12 +460,24 @@ contract HouseStorage is Ownable, InvestorStorage {
     }
 
     function toSecondFloorNewHouse() internal {
-        totalFloorBuilded = totalFloorBuilded.add(1);
-        houses[currentHouse].lastFloor = houses[currentHouse].lastFloor.add(1);
         houses[currentHouse].paymentTokenTotal = tokenAllocated;
         numberTokensPerFloor = tokenAllocated;
         houses[currentHouse].paymentTokenPerFloor = 0;
-        houses[currentHouse].priceToken = averagePriceToken.mul(tokensCostIncreaseRatio).div(100);
+        if (tokenAllocated == 0) {
+            uint256 amountEth = address(this).balance;
+            if (amountEth > 0){
+                administrationWallet.transfer(amountEth);
+            }
+            stopBuyTokens = true;
+            houses[currentHouse].totalEth = 0;
+            houses[currentHouse].priceToken = 0;
+            finishProject = true;
+        } else {
+            totalFloorBuilded = totalFloorBuilded.add(1);
+            houses[currentHouse].lastFloor = houses[currentHouse].lastFloor.add(1);
+            houses[currentHouse].totalEth = address(this).balance;
+            houses[currentHouse].priceToken = averagePriceToken.mul(tokensCostIncreaseRatio).div(100);
+        }
     }
 
     function makeStopBuyTokens() internal {
@@ -489,6 +503,12 @@ contract HouseStorage is Ownable, InvestorStorage {
         currentHouse++;
         if (currentHouse < MAX_NUMBER_HOUSE) {
             initHouse(currentHouse, averagePriceToken);
+        } else {
+            finishProject = true;
+            uint256 amountEth = address(this).balance;
+            if (amountEth > 0){
+                administrationWallet.transfer(amountEth);
+            }
         }
 
         if (address(this).balance > transferEth){

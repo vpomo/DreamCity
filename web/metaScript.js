@@ -1,4 +1,4 @@
-var adrressContractRopsten = "0xd07954ec829655cd19da6315274fa799bacf7984";
+var adrressContractRopsten = "0x2aa41334aba9b6ccf27d7f18a4b7a0a64fa52e7d";
 var adrressContractMain = "0xe4a60882c473e008b4e1c942bd73addf50483825";
 var contract;
 var SECUND_TO_DAY = 86400;
@@ -229,6 +229,26 @@ function startApp() {
         console.log("tokenAllocated = " + data);
         var tokenAllocated = data;
         $('#tokenAllocated').html(tokenAllocated.toFixed(0));
+    });
+
+    contract.getCurrentDate( function (error, data) {
+        console.log("getCurrentDate = " + data);
+        var gmt = data;
+        $('#gmt').html(timeConverter(gmt));
+    });
+
+    contract.finishProject.call( function (error, data) {
+        console.log("finishProject = " + data);
+        var finishProject = data;
+        if (finishProject == false) {
+            $('#divDappInfo').removeClass("alert-danger");
+            $('#divDappInfo').removeClass("alert");
+            $('#finish').html("");
+        } else {
+            $('#divDappInfo').addClass("alert-danger");
+            $('#divDappInfo').addClass("alert");
+            $('#finish').html("Проект завершил свою работу");
+        }
     });
 
 }
@@ -970,6 +990,20 @@ function initContract() {
                 {
                     "name": "",
                     "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "finishProject",
+            "outputs": [
+                {
+                    "name": "",
+                    "type": "bool"
                 }
             ],
             "payable": false,
