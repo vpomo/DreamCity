@@ -387,7 +387,8 @@ contract HouseStorage is Ownable, InvestorStorage {
     constructor() public {
         stopBuyTokens = false;
         finishProject = false;
-        startTime = now; //for test's
+//        startTime = now; //for test's
+        startTime = 0; //for test's
         simulateDate = startTime;
     }
 
@@ -437,29 +438,30 @@ contract HouseStorage is Ownable, InvestorStorage {
             timeLastPayment = arrayPaidTokenLastDay[lastNumberInvestor].paymentTime;
         }
         uint256 numberCheckDay = getNumberDay(_date);
+        uint256 numberStartBuildHouse = getNumberDay(houses[currentHouse].startTimeBuild);
         countPaidTokenPrevDay = paidPerDay[numberCheckDay-1];
 
-        if (countPaidTokenPrevDay > 0) {
-            firstDay = false;
-        }
-
         if (stopBuyTokens == false) {
+            if (countPaidTokenPrevDay > 0) {
+                firstDay = false;
+            }
+            if (numberStartBuildHouse < numberCheckDay) {
+                firstDay = false;
+            }
             if (!firstDay) {
                 if (countPaidTokenPrevDay < minNumberSalesTokens) {
                     makeStopBuyTokens();
                 }
             }
         } else {
-            uint256 numberStartBuildHouse = getNumberDay(houses[currentHouse].startTimeBuild);
-            if (currentHouse > 1 && numberStartBuildHouse < numberCheckDay) {
-                stopBuyTokens = false;
-                toSecondFloorNewHouse();
+            if (currentHouse > 1 && numberStartBuildHouse < numberCheckDay && !finishProject) {
+                stopBuyTokens = toSecondFloorNewHouse();
             }
         }
         return stopBuyTokens;
     }
 
-    function toSecondFloorNewHouse() internal {
+    function toSecondFloorNewHouse() internal returns (bool) {
         houses[currentHouse].paymentTokenTotal = tokenAllocated;
         numberTokensPerFloor = tokenAllocated;
         houses[currentHouse].paymentTokenPerFloor = 0;
@@ -468,15 +470,16 @@ contract HouseStorage is Ownable, InvestorStorage {
             if (amountEth > 0){
                 administrationWallet.transfer(amountEth);
             }
-            stopBuyTokens = true;
             houses[currentHouse].totalEth = 0;
             houses[currentHouse].priceToken = 0;
             finishProject = true;
+            return true;
         } else {
             totalFloorBuilded = totalFloorBuilded.add(1);
             houses[currentHouse].lastFloor = houses[currentHouse].lastFloor.add(1);
             houses[currentHouse].totalEth = address(this).balance;
             houses[currentHouse].priceToken = averagePriceToken.mul(tokensCostIncreaseRatio).div(100);
+            return false;
         }
     }
 
@@ -496,7 +499,7 @@ contract HouseStorage is Ownable, InvestorStorage {
         uint256 percentToInvestor = fullPercent.sub(totalPercent.add(percentToWallet));
         uint256 profit = 0;
         averagePriceToken = currentRaisedEth.mul(percentToInvestor).div(fullPercent).div(currentRaisedToken);
-        averagePriceToken = roundPrice(averagePriceToken, 3); //for test's
+        //averagePriceToken = roundPrice(averagePriceToken, 3); //for test's
         houses[currentHouse].stopTimeBuild = getCurrentDate();
         totalFloorBuilded = totalFloorBuilded.add(1);
 
@@ -651,7 +654,12 @@ contract HouseStorage is Ownable, InvestorStorage {
     }
 
     function getPriceTokenNextHouse() public view returns(uint256 result) {
-        uint256 amountEth = getTotalEthPerHouse(currentHouse).mul(8).div(10);
+        uint256 fullPercent = 100;
+
+        uint256 totalPercent = percentToAdministration.add(percentToLastRemainingToken).add(percentToLastToken);
+        uint256 percentToInvestor = fullPercent.sub(totalPercent.add(percentToWallet));
+
+        uint256 amountEth = getTotalEthPerHouse(currentHouse).mul(percentToInvestor).div(fullPercent);
         result = amountEth.div(houses[currentHouse].priceToken);
     }
 
