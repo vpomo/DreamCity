@@ -1,4 +1,4 @@
-var adrressContractRopsten = "0x2aa41334aba9b6ccf27d7f18a4b7a0a64fa52e7d";
+var adrressContractRopsten = "0xba179f93a8ae7fa8e23d85bdf6bd82a24d7fe351";
 var adrressContractMain = "0xe4a60882c473e008b4e1c942bd73addf50483825";
 var contract;
 var SECUND_TO_DAY = 86400;
@@ -385,6 +385,15 @@ function initContract() {
                     "type": "bool"
                 }
             ],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "constant": false,
+            "inputs": [],
+            "name": "claimEth",
+            "outputs": [],
             "payable": false,
             "stateMutability": "nonpayable",
             "type": "function"

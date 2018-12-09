@@ -98,6 +98,7 @@ contract InvestorStorage is Ownable {
     uint256 public totalPrize = 0;
 
     bool public isDemo;
+    bool public stopBuyTokens;
 
     uint256 public startTime;
     uint256 public simulateDate;
@@ -184,7 +185,9 @@ contract InvestorStorage is Ownable {
         setPaidLastInvestorPerDay(_investor, _amountToken, _paymentTime);
         totalEthPerHouse = totalEthPerHouse.add(_investment);
         uint256 numberDay = getNumberDay(getCurrentDate());
-        paidPerDay[numberDay] = paidPerDay[numberDay].add(_amountToken);
+        if (!stopBuyTokens) {
+            paidPerDay[numberDay] = paidPerDay[numberDay].add(_amountToken);
+        }
         emit TokenPurchaise(_investor, _paymentTime, _investment, _amountToken);
     }
 
@@ -360,7 +363,6 @@ contract HouseStorage is Ownable, InvestorStorage {
     address public administrationWallet;
     address public wallet;
 
-    bool public stopBuyTokens;
     bool public finishProject;
     bool firstDay = false;
 
@@ -445,7 +447,7 @@ contract HouseStorage is Ownable, InvestorStorage {
             if (countPaidTokenPrevDay > 0) {
                 firstDay = false;
             }
-            if (numberStartBuildHouse < numberCheckDay) {
+            if (currentHouse > 1 && numberStartBuildHouse < numberCheckDay) {
                 firstDay = false;
             }
             if (!firstDay) {
@@ -466,10 +468,6 @@ contract HouseStorage is Ownable, InvestorStorage {
         numberTokensPerFloor = tokenAllocated;
         houses[currentHouse].paymentTokenPerFloor = 0;
         if (tokenAllocated == 0) {
-            uint256 amountEth = address(this).balance;
-            if (amountEth > 0){
-                administrationWallet.transfer(amountEth);
-            }
             houses[currentHouse].totalEth = 0;
             houses[currentHouse].priceToken = 0;
             finishProject = true;
@@ -823,7 +821,15 @@ contract DreamCity is Ownable, HouseStorage {
         }
     }
 
-    function saleTokens(address _investor) public payable {
+function claimEth() public onlyOwner {
+    require(finishProject);
+    uint256 amountEth = address(this).balance;
+    if (amountEth > 0){
+        administrationWallet.transfer(amountEth);
+    }
+}
+
+function saleTokens(address _investor) public payable {
         require(_investor != address(0));
         require(msg.value == ETH_FOR_SALE_TOKEN);
         uint256 currentDate = getCurrentDate();
