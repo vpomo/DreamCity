@@ -161,30 +161,29 @@ it('check sale token', async ()  => {
     mainInfoInvestor = await contract.investorMainInfo.call(accounts[2]);
     assert.equal(24, Number(mainInfoInvestor[2])); //amountToken
 
-    await contract.buyTokens(accounts[2], {from:accounts[2], value: saleEthOne});
-    await contract.buyTokens(accounts[4], {from:accounts[4], value: saleEthOne});
+    // await contract.buyTokens(accounts[2], {from:accounts[2], value: saleEthOne});
+    // await contract.buyTokens(accounts[4], {from:accounts[4], value: saleEthOne});
+    //
+    // var houseInfo = await contract.houseInfo.call(2);
+    // console.log("houseInfo.paymentTokenPerFloor", Number(houseInfo[0])); //paymentTokenPerFloor
+    //
+    // var tokenAllocated = await contract.tokenAllocated.call();
+    // console.log("tokenAllocated", Number(tokenAllocated)); //tokenAllocated
+    //
+    // await contract.setSimulateDate(1541210400); //03 Nov 2018 02:00:00 GMT
+    // await contract.buyTokens(accounts[3], {from:accounts[3], value: buyEthOne});
+    //
+    // var finishProject = await contract.finishProject.call();
+    // console.log("finishProject", finishProject); //finishProject
+    //
+    // await contract.claimEth();
 
-    var houseInfo = await contract.houseInfo.call(2);
-    console.log("houseInfo.paymentTokenPerFloor", Number(houseInfo[0])); //paymentTokenPerFloor
-
-    var tokenAllocated = await contract.tokenAllocated.call();
-    console.log("tokenAllocated", Number(tokenAllocated)); //tokenAllocated
-
-    await contract.setSimulateDate(1541210400); //03 Nov 2018 02:00:00 GMT
-    await contract.buyTokens(accounts[3], {from:accounts[3], value: buyEthOne});
-
-    var finishProject = await contract.finishProject.call();
-    console.log("finishProject", finishProject); //finishProject
-
-    await contract.claimEth();
-
-// await contract.addToAdminlist(accounts[8]);
-    // await contract.buyTokens(accounts[8], {from:accounts[8], value: buyEthTwo});
-    // mainInfoInvestor = await contract.investorMainInfo.call(accounts[8]);
-    // assert.equal(28, Number(mainInfoInvestor[2])); //amountToken
+    await contract.addToAdminlist(accounts[8]);
+    await contract.buyTokens(accounts[8], {from:accounts[8], value: buyEthTwo});
+    mainInfoInvestor = await contract.investorMainInfo.call(accounts[8]);
+    assert.equal(28, Number(mainInfoInvestor[2])); //amountToken
 });
 
-/*
 
 it('check start buy token for (day + 1) after stop buy token', async ()  => {
     var totalFloorBuilded = await contract.totalFloorBuilded.call();
@@ -288,7 +287,6 @@ totalFloorBuilded = await contract.totalFloorBuilded.call();
 assert.equal(6, Number(totalFloorBuilded));
 
 });
-*/
 
 /*
     it('check time for change status buy token', async ()  => {

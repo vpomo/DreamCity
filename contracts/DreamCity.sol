@@ -447,7 +447,7 @@ contract HouseStorage is Ownable, InvestorStorage {
             if (countPaidTokenPrevDay > 0) {
                 firstDay = false;
             }
-            if (currentHouse > 1 && numberStartBuildHouse < numberCheckDay) {
+            if (numberStartBuildHouse.add(2) < numberCheckDay) {
                 firstDay = false;
             }
             if (!firstDay) {
