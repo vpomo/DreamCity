@@ -155,7 +155,7 @@ it('check sale token', async ()  => {
 
     var houseInfo = await contract.houseInfo.call(1);
     // console.log("houseInfo.refundEth", Number(houseInfo.refundEth/decimal));
-    assert.equal(4.8580025, Number(houseInfo[5]/decimal));//refundEth
+    assert.equal(9.9619, Number(houseInfo[5]/decimal));//refundEth
 
     //await contract.buyTokens(accounts[2], {from:accounts[2], value: buyEthOne});
     mainInfoInvestor = await contract.investorMainInfo.call(accounts[2]);

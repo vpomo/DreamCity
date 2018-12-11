@@ -1,4 +1,4 @@
-var adrressContractRopsten = "0xef05a06b183955408ec77bd694ad5aed0de8749d";
+var adrressContractRopsten = "0x07e53ecafec0f0d1879d229d4898758c4f922578";
 var adrressContractMain = "0xe4a60882c473e008b4e1c942bd73addf50483825";
 var contract;
 var SECUND_TO_DAY = 86400;
@@ -601,20 +601,6 @@ function initContract() {
             "constant": false,
             "inputs": [
                 {
-                    "name": "_percent",
-                    "type": "uint256"
-                }
-            ],
-            "name": "setPercentToWallet",
-            "outputs": [],
-            "payable": false,
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "constant": false,
-            "inputs": [
-                {
                     "name": "_newDate",
                     "type": "uint256"
                 }
@@ -654,20 +640,6 @@ function initContract() {
             "type": "function"
         },
         {
-            "constant": false,
-            "inputs": [
-                {
-                    "name": "_newWallet",
-                    "type": "address"
-                }
-            ],
-            "name": "setWallet",
-            "outputs": [],
-            "payable": false,
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
             "inputs": [
                 {
                     "name": "_owner",
@@ -679,10 +651,6 @@ function initContract() {
                 },
                 {
                     "name": "_administrationWallet",
-                    "type": "address"
-                },
-                {
-                    "name": "_wallet",
                     "type": "address"
                 }
             ],
@@ -1530,20 +1498,6 @@ function initContract() {
         {
             "constant": true,
             "inputs": [],
-            "name": "percentToWallet",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
             "name": "simulateDate",
             "outputs": [
                 {
@@ -1689,20 +1643,6 @@ function initContract() {
                 {
                     "name": "",
                     "type": "uint256"
-                }
-            ],
-            "payable": false,
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "constant": true,
-            "inputs": [],
-            "name": "wallet",
-            "outputs": [
-                {
-                    "name": "",
-                    "type": "address"
                 }
             ],
             "payable": false,

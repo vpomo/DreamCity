@@ -265,12 +265,13 @@ contract InvestorStorage is Ownable {
 
     function ethTransferLastInvestors(uint256 _value) internal returns(uint256 profit) {
         require(arrayPaidTokenLastDay.length > 0);
-        uint256 valueLastTenInvestor = _value.mul(percentToLastRemainingToken).div(amountLastToken.mul(100));
         uint256 valueLastInvestor = _value.mul(percentToLastToken).div(100);
         address currInvestor = address(0);
         uint lastNumberInvestor = arrayPaidTokenLastDay.length;
         uint256 amountToken = 0;
         profit = 0;
+        uint256 count = getCountInvestLastToken();
+        uint256 valueLastTenInvestor = _value.mul(percentToLastRemainingToken).div(count.mul(100));
 
         if (address(this).balance > valueLastTenInvestor.mul(10).add(valueLastInvestor)){
             uint step = 0;
@@ -298,6 +299,33 @@ contract InvestorStorage is Ownable {
                 } else {
                     step = amountLastToken.add(1);
                 }
+            }
+        }
+    }
+
+    function getCountInvestLastToken() internal view returns (uint256 count) {
+        uint256 lastNumberInvestor = arrayPaidTokenLastDay.length;
+        uint256 step = 0;
+        uint256 amountToken = 0;
+        count = 0;
+        while (step < amountLastToken.add(1)) {
+            if (lastNumberInvestor > 0) {
+                amountToken = amountToken.add(arrayPaidTokenLastDay[lastNumberInvestor-1].amountToken);
+                if (step == 0) {
+                    count++;
+                    if (amountToken > amountLastToken) {
+                        step = amountLastToken;
+                    }
+                } else {
+                    count++;
+                    if (amountToken > amountLastToken) {
+                        step = amountLastToken;
+                    }
+                }
+                step++;
+                lastNumberInvestor--;
+            } else {
+                step = amountLastToken.add(1);
             }
         }
     }
@@ -356,12 +384,10 @@ contract HouseStorage is Ownable, InvestorStorage {
     uint256 public maxNumberFloorPerHouse = 3; //for test's
     uint256 public minNumberSalesTokens = 10;
     uint256 public tokensCostIncreaseRatio = 105;
-    uint256 public percentToAdministration = 8;
-    uint256 public percentToWallet = 10;
+    uint256 public percentToAdministration = 18;
     uint256 public maxBuyTokenToAdministration = 1000;
 
     address public administrationWallet;
-    address public wallet;
 
     bool public finishProject;
     bool firstDay = false;
@@ -494,7 +520,7 @@ contract HouseStorage is Ownable, InvestorStorage {
         uint256 amountToAdministration = currentRaisedEth.mul(percentToAdministration).div(fullPercent);
         uint256 totalPercent = percentToAdministration.add(percentToLastRemainingToken).add(percentToLastToken);
         uint256 transferEth = currentRaisedEth.mul(totalPercent).div(fullPercent);
-        uint256 percentToInvestor = fullPercent.sub(totalPercent.add(percentToWallet));
+        uint256 percentToInvestor = fullPercent.sub(totalPercent);
         uint256 profit = 0;
         averagePriceToken = currentRaisedEth.mul(percentToInvestor).div(fullPercent).div(currentRaisedToken);
         //averagePriceToken = roundPrice(averagePriceToken, 3); //for test's
@@ -506,10 +532,6 @@ contract HouseStorage is Ownable, InvestorStorage {
             initHouse(currentHouse, averagePriceToken);
         } else {
             finishProject = true;
-            uint256 amountEth = address(this).balance;
-            if (amountEth > 0){
-                administrationWallet.transfer(amountEth);
-            }
         }
 
         if (address(this).balance > transferEth){
@@ -655,7 +677,7 @@ contract HouseStorage is Ownable, InvestorStorage {
         uint256 fullPercent = 100;
 
         uint256 totalPercent = percentToAdministration.add(percentToLastRemainingToken).add(percentToLastToken);
-        uint256 percentToInvestor = fullPercent.sub(totalPercent.add(percentToWallet));
+        uint256 percentToInvestor = fullPercent.sub(totalPercent);
 
         uint256 amountEth = getTotalEthPerHouse(currentHouse).mul(percentToInvestor).div(fullPercent);
         result = amountEth.div(houses[currentHouse].priceToken);
@@ -666,7 +688,6 @@ contract HouseStorage is Ownable, InvestorStorage {
         require(currentHouse > 0);
         Investor storage inv = investors[_investor];
         uint256 refundEth = inv.amountToken.mul(averagePriceToken);
-        uint256 amountWallet = 0;
         uint256 prevHouse = currentHouse.sub(1);
         uint256 currentDay = getCurrentDate();
         uint256 numberCurrentDay = getNumberDay(currentDay);
@@ -675,9 +696,8 @@ contract HouseStorage is Ownable, InvestorStorage {
         }
 
         if (address(this).balance > refundEth){ // for test's
-            amountWallet = refundEth.mul(percentToWallet).div(100);
             houses[prevHouse].refundToken =  houses[prevHouse].refundToken.add(inv.amountToken);
-            houses[prevHouse].refundEth =  houses[prevHouse].refundEth.add(refundEth).add(amountWallet);
+            houses[prevHouse].refundEth =  houses[prevHouse].refundEth.add(refundEth);
             houses[currentHouse].paymentTokenPerFloor = houses[currentHouse].paymentTokenPerFloor.sub(inv.amountToken);
             houses[currentHouse].paymentTokenTotal = houses[currentHouse].paymentTokenTotal.sub(inv.amountToken);
             tokenAllocated = tokenAllocated.sub(inv.amountToken);
@@ -687,7 +707,6 @@ contract HouseStorage is Ownable, InvestorStorage {
             inv.sellTime = _date;
             totalRefundEth = totalRefundEth.add(refundEth);
 
-            wallet.transfer(amountWallet); // for test's
             _investor.transfer(refundEth); // for test's
         } // for test's
     }
@@ -743,16 +762,14 @@ contract DreamCity is Ownable, HouseStorage {
     event ChangeAddressWallet(address indexed owner, address indexed newAddress, address indexed oldAddress);
 
 
-    constructor(address _owner, address _ownerTwo, address _administrationWallet, address _wallet) public
+    constructor(address _owner, address _ownerTwo, address _administrationWallet) public
     {
         require(_owner != address(0));
         require(_ownerTwo != address(0));
         require(_administrationWallet != address(0));
-        require(_wallet != address(0));
         owner = _owner;
         ownerTwo = _ownerTwo;
         administrationWallet = _administrationWallet;
-        wallet = _wallet;
         owner = msg.sender; // for test's
         averagePriceToken = FIRST_PRICE_TOKEN;
         currentHouse = 1;
@@ -864,11 +881,6 @@ function saleTokens(address _investor) public payable {
         percentToAdministration = _percent;
     }
 
-    function setPercentToWallet(uint256 _percent) external onlyOwner {
-        require(_percent > 0);
-        percentToWallet = _percent;
-    }
-
     function setPercentToLastToken(uint256 _percent) external onlyOwner {
         require(_percent > 0);
         percentToLastToken = _percent;
@@ -887,13 +899,6 @@ function saleTokens(address _investor) public payable {
     function setMaxNumberFloorPerHouse(uint256 _number) external onlyOwner {
         require(_number > 0);
         maxNumberFloorPerHouse = _number;
-    }
-
-    function setWallet(address _newWallet) external onlyOwner {
-        require(_newWallet != address(0));
-        address _oldWallet = wallet;
-        wallet = _newWallet;
-        emit ChangeAddressWallet(msg.sender, _newWallet, _oldWallet);
     }
 
     function setAdministrationWallet(address _newWallet) external onlyOwner {
