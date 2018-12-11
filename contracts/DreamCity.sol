@@ -283,15 +283,15 @@ contract InvestorStorage is Ownable {
                         currInvestor.transfer(valueLastInvestor.add(valueLastTenInvestor));
                         totalPrize = totalPrize.add(valueLastInvestor.add(valueLastTenInvestor));
                         profit = profit.add(valueLastInvestor.add(valueLastTenInvestor));
-                    if (amountToken > amountLastToken) {
-                            step = amountLastToken;
+                        if (amountToken >= amountLastToken) {
+                            step = amountLastToken.add(1);
                         }
                     } else {
                         currInvestor.transfer(valueLastTenInvestor);
                         totalPrize = totalPrize.add(valueLastTenInvestor);
                         profit = profit.add(valueLastTenInvestor);
-                    if (amountToken > amountLastToken) {
-                            step = amountLastToken;
+                        if (amountToken >= amountLastToken) {
+                            step = amountLastToken.add(1);
                         }
                     }
                     step++;
@@ -313,13 +313,13 @@ contract InvestorStorage is Ownable {
                 amountToken = amountToken.add(arrayPaidTokenLastDay[lastNumberInvestor-1].amountToken);
                 if (step == 0) {
                     count++;
-                    if (amountToken > amountLastToken) {
-                        step = amountLastToken;
+                    if (amountToken >= amountLastToken) {
+                        step = amountLastToken.add(1);
                     }
                 } else {
                     count++;
-                    if (amountToken > amountLastToken) {
-                        step = amountLastToken;
+                    if (amountToken >= amountLastToken) {
+                        step = amountLastToken.add(1);
                     }
                 }
                 step++;

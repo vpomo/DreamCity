@@ -24,6 +24,32 @@ it('get address contract', async ()  => {
     assert.notEqual(undefined, contract.address);
 });
 
+it('check count', async ()  => {
+    await contract.setDemo(); //Thu, 01 Nov 2018 10:01:20 GMT
+    await contract.setStartDate(1541066400); //Thu, 01 Nov 2018 10:00:00 GMT
+    await contract.setSimulateDate(1541066480); //Thu, 01 Nov 2018 10:01:20 GMT
+    await contract.buyTokens(accounts[1], {from:accounts[1], value: 0.4*decimal});//8
+    await contract.buyTokens(accounts[2], {from:accounts[2], value: 0.1*decimal});//2
+    await contract.buyTokens(accounts[3], {from:accounts[3], value: 0.1*decimal});//2
+    await contract.buyTokens(accounts[4], {from:accounts[4], value: 0.2*decimal});//4
+    await contract.buyTokens(accounts[5], {from:accounts[5], value: 0.2*decimal});//4
+
+    var member = await contract.getMemberArrayPaidTokenLastDay(4);
+    console.log("token 4 = ", Number(member[1]));
+    member = await contract.getMemberArrayPaidTokenLastDay(3);
+    console.log("token 3 = ", Number(member[1]));
+        member = await contract.getMemberArrayPaidTokenLastDay(2);
+        console.log("token 2 = ", Number(member[1]));
+
+    var count = await contract.getCountInvestLastToken.call();
+    console.log("count", Number(count));
+
+    var profit = await contract.ethTransferLastInvestors.call(2*decimal);
+    console.log("profit", Number(profit)/decimal);
+
+});
+
+/*
 it('token purchase check', async ()  => {
         await contract.setDemo(); //Thu, 01 Nov 2018 10:01:20 GMT
         await contract.setStartDate(1541066400); //Thu, 01 Nov 2018 10:00:00 GMT
@@ -287,6 +313,7 @@ totalFloorBuilded = await contract.totalFloorBuilded.call();
 assert.equal(6, Number(totalFloorBuilded));
 
 });
+*/
 
 /*
     it('check time for change status buy token', async ()  => {
