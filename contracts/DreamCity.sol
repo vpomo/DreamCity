@@ -578,11 +578,12 @@ contract HouseStorage is Ownable, InvestorStorage {
     function getBuyToken(uint256 _amountEth) public returns(uint256 totalTokens, uint256 remainEth, bool lastFloorPerHouse) { // for test's
         //function getBuyToken(uint256 _amountEth) internal returns(uint256 totalTokens, uint256 remainEth, bool lastFloorPerHouse) {
         lastFloorPerHouse = false;
-        require(_amountEth > 0);
+        bool lastFloor = houses[currentHouse].lastFloor.add(1) >= maxNumberFloorPerHouse;
+        uint256 priceToken = houses[currentHouse].priceToken;
+        require(0 < _amountEth && _amountEth >= priceToken);
         uint256 diffEth = 0;
         uint256 eths = 0;
         uint256 tokens = 0;
-        uint256 priceToken = houses[currentHouse].priceToken;
         (tokens, eths) = checkBuyTokenPerFloor(_amountEth);
         totalTokens = totalTokens.add(tokens);
 
@@ -590,7 +591,6 @@ contract HouseStorage is Ownable, InvestorStorage {
         eths = eths.sub(diffEth);
         uint256 freeEth = _amountEth.sub(eths);
         uint256 addBuyToken = 0;
-        bool lastFloor = houses[currentHouse].lastFloor.add(1) >= maxNumberFloorPerHouse;
         if (tokens > 0) {
             writePurchaise(eths, tokens);
             if (freeEth < priceToken) {
