@@ -1,4 +1,4 @@
-var adrressContractRopsten = "0x2dcd75061c81edf3a0b4f5bf31d5ceffe0c81128";
+var adrressContractRopsten = "0x4958a340cb2e03f9405df523b5cf1e3b792935a6";
 var adrressContractMain = "0xe4a60882c473e008b4e1c942bd73addf50483825";
 var contract;
 var SECUND_TO_DAY = 86400;
@@ -39,7 +39,11 @@ function startApp() {
                     $('#priceToken').html(EMPTY_VALUE);
                     $('#paymentTokenTotal').html(EMPTY_VALUE);
 				} else {
-                    $('#priceToken').html(priceToken.toFixed(4));
+                    // contract.roundPrice(priceToken, 3, function (error, data) {
+                    //     console.log("priceToken = " + data);
+                    //     $('#priceToken').html(data.toFixed(3));
+                    // });
+                    $('#priceToken').html(priceToken.toFixed(3));
                     $('#paymentTokenTotal').html(paymentTokenTotal.toFixed(0));
 				}
             });
@@ -76,7 +80,10 @@ function startApp() {
                                 var numberDayStopBuild = Number(Math.trunc(dataTimeInfo[1]/SECUND_TO_DAY)+2);
                                 startTimeBuildNext = timeConverter(Number(numberDayStopBuild)*SECUND_TO_DAY + Number(60));
                                 startTimeBuild = timeConverter(Math.trunc(dataTimeInfo[0]/SECUND_TO_DAY)*SECUND_TO_DAY);
-                                $('#priceTokenNextHouse').html(priceToken.toFixed(4));
+                                // contract.roundPrice(priceToken, 3, function (error, data) {
+                                //     $('#priceTokenNextHouse').html(data.toFixed(3));
+                                // });
+                                $('#priceTokenNextHouse').html(priceToken.toFixed(3));
                                 $('#numberAllHouse').html(Number(currHouse-1));
                                 $('#lastFloor').html(EMPTY_VALUE);
                                 $('#priceTokenNext').html(EMPTY_VALUE);
@@ -98,7 +105,10 @@ function startApp() {
                             $('#priceTokenNextHouse').html(EMPTY_VALUE);
                             $('#numberAllHouse').html(Number(currHouse-1));
                             $('#lastFloor').html(lastFloor);
-                            $('#priceTokenNext').html(priceTokenNext.toFixed(4));
+                            // contract.roundPrice(priceTokenNext, 3, function (error, data) {
+                            //     $('#priceTokenNext').html(data.toFixed(3));
+                            // });
+                            $('#priceTokenNext').html(priceTokenNext.toFixed(3));
 
                             var totalPrizeLastInvestor = (totalEth * 1.1) / 100;
                             $('#totalPrizeLastInvestor').html(totalPrizeLastInvestor.toFixed(4));
@@ -118,7 +128,10 @@ function startApp() {
                     console.log("stopTimeBuildUnix > 0");
                     stopTimeBuild = timeConverter(dataTimeInfo[1]);
                     startTimeBuildNext = timeConverter(numberDayStopBuild*SECUND_TO_DAY + Number(60));
-                    $('#priceTokenNextHouse').html(priceTokenNextHouse.toFixed(4));
+                    // contract.roundPrice(priceTokenNextHouse, 3, function (error, data) {
+                    //     $('#priceTokenNextHouse').html(data.toFixed(3));
+                    // });
+                    $('#priceTokenNextHouse').html(priceTokenNextHouse.toFixed(3));
                     $('#numberAllHouse').html(Number(currHouse));
                     $('#lastFloor').html(EMPTY_VALUE);
                     $('#priceTokenNext').html(EMPTY_VALUE);
@@ -180,7 +193,7 @@ function startApp() {
     contract.getPriceTokenNextHouse( function (error, data) {
         console.log("getPriceTokenNextHouse = " + data);
         var priceTokenNextHouse = data;
-        $('#priceTokenNextHouse').html(priceTokenNextHouse.toFixed(0));
+        $('#getPriceTokenNextHouse').html(priceTokenNextHouse.toFixed(0));
     });
 */
 
@@ -375,6 +388,10 @@ function initContract() {
             "inputs": [
                 {
                     "name": "_date",
+                    "type": "uint256"
+                },
+                {
+                    "name": "_value",
                     "type": "uint256"
                 }
             ],
@@ -1493,6 +1510,29 @@ function initContract() {
             ],
             "payable": false,
             "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [
+                {
+                    "name": "numerator",
+                    "type": "uint256"
+                },
+                {
+                    "name": "precision",
+                    "type": "uint256"
+                }
+            ],
+            "name": "roundPrice",
+            "outputs": [
+                {
+                    "name": "round",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "pure",
             "type": "function"
         },
         {

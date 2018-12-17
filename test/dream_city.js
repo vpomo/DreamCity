@@ -24,6 +24,7 @@ it('get address contract', async ()  => {
     assert.notEqual(undefined, contract.address);
 });
 
+/*
 it('check count', async ()  => {
     await contract.setDemo(); //Thu, 01 Nov 2018 10:01:20 GMT
     await contract.setStartDate(1541066400); //Thu, 01 Nov 2018 10:00:00 GMT
@@ -47,6 +48,16 @@ it('check count', async ()  => {
     var profit = await contract.ethTransferLastInvestors.call(2*decimal);
     console.log("profit", Number(profit)/decimal);
 
+});
+*/
+
+it('check round price', async ()  => {
+    await contract.setDemo(); //Thu, 01 Nov 2018 10:01:20 GMT
+    await contract.setStartDate(1541066400); //Thu, 01 Nov 2018 10:00:00 GMT
+    await contract.setSimulateDate(1541066480); //Thu, 01 Nov 2018 10:01:20 GMT
+
+    var roundPrice = await contract.roundPrice(0.05145*decimal, 3);
+    console.log("roundPrice", Number(roundPrice)/decimal);
 });
 
 /*
