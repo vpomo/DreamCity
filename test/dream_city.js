@@ -24,16 +24,15 @@ it('get address contract', async ()  => {
     assert.notEqual(undefined, contract.address);
 });
 
-/*
 it('check count', async ()  => {
     await contract.setDemo(); //Thu, 01 Nov 2018 10:01:20 GMT
     await contract.setStartDate(1541066400); //Thu, 01 Nov 2018 10:00:00 GMT
     await contract.setSimulateDate(1541066480); //Thu, 01 Nov 2018 10:01:20 GMT
     await contract.buyTokens(accounts[1], {from:accounts[1], value: 0.4*decimal});//8
     await contract.buyTokens(accounts[2], {from:accounts[2], value: 0.1*decimal});//2
-    await contract.buyTokens(accounts[3], {from:accounts[3], value: 0.1*decimal});//2
+    await contract.buyTokens(accounts[3], {from:accounts[3], value: 0.4*decimal});//8
     await contract.buyTokens(accounts[4], {from:accounts[4], value: 0.2*decimal});//4
-    await contract.buyTokens(accounts[5], {from:accounts[5], value: 0.2*decimal});//4
+    await contract.buyTokens(accounts[5], {from:accounts[5], value: 0.1*decimal});//2
 
     var member = await contract.getMemberArrayPaidTokenLastDay(4);
     console.log("token 4 = ", Number(member[1]));
@@ -49,8 +48,8 @@ it('check count', async ()  => {
     console.log("profit", Number(profit)/decimal);
 
 });
-*/
 
+/*
 it('check round price', async ()  => {
     await contract.setDemo(); //Thu, 01 Nov 2018 10:01:20 GMT
     await contract.setStartDate(1541066400); //Thu, 01 Nov 2018 10:00:00 GMT
@@ -59,6 +58,7 @@ it('check round price', async ()  => {
     var roundPrice = await contract.roundPrice(0.05145*decimal, 3);
     console.log("roundPrice", Number(roundPrice)/decimal);
 });
+*/
 
 /*
 it('token purchase check', async ()  => {

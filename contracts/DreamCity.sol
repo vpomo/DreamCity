@@ -258,7 +258,7 @@ contract InvestorStorage is Ownable {
         uint256 currentDay = getCurrentDate();
         uint256 numberCurrentDay = getNumberDay(currentDay);
         amountTokenLastDayIfLessTen = paidPerDay[numberCurrentDay];
-        if (amountTokenLastDayIfLessTen > 10) {
+        if (amountTokenLastDayIfLessTen > amountLastToken) {
             amountTokenLastDayIfLessTen = 0;
         }
     }
@@ -270,26 +270,41 @@ contract InvestorStorage is Ownable {
         uint lastNumberInvestor = arrayPaidTokenLastDay.length;
         uint256 amountToken = 0;
         profit = 0;
-        uint256 count = getCountInvestLastToken();
-        uint256 valueLastTenInvestor = _value.mul(percentToLastRemainingToken).div(count.mul(100));
+        uint256 count = 0;
+        uint256 valueLastTenInvestor = _value.mul(percentToLastRemainingToken).div(amountLastToken.mul(100));
+        uint256 ethLastInvestor = 0;
+        uint256 ethCurrentInvestor = 0;
 
-        if (address(this).balance > valueLastTenInvestor.mul(10).add(valueLastInvestor)){
+        if (address(this).balance > valueLastTenInvestor.mul(amountLastToken).add(valueLastInvestor)){
             uint step = 0;
             while (step < amountLastToken.add(1)) {
                 if (lastNumberInvestor > 0) {
                     currInvestor = arrayPaidTokenLastDay[lastNumberInvestor-1].investor;
                     amountToken = amountToken.add(arrayPaidTokenLastDay[lastNumberInvestor-1].amountToken);
                     if (step == 0) {
-                        currInvestor.transfer(valueLastInvestor.add(valueLastTenInvestor));
-                        totalPrize = totalPrize.add(valueLastInvestor.add(valueLastTenInvestor));
-                        profit = profit.add(valueLastInvestor.add(valueLastTenInvestor));
+                        ethLastInvestor = valueLastInvestor;
+                        if (amountToken <= amountLastToken) {
+                            ethLastInvestor = ethLastInvestor.add(valueLastTenInvestor.mul(amountToken));
+                            count = amountToken;
+                        } else {
+                            ethLastInvestor = ethLastInvestor.add(valueLastTenInvestor.mul(amountLastToken));
+                        }
+                        currInvestor.transfer(ethLastInvestor);
+                        totalPrize = totalPrize.add(ethLastInvestor);
+                        profit = profit.add(ethLastInvestor);
                         if (amountToken >= amountLastToken) {
                             step = amountLastToken.add(1);
                         }
                     } else {
-                        currInvestor.transfer(valueLastTenInvestor);
-                        totalPrize = totalPrize.add(valueLastTenInvestor);
-                        profit = profit.add(valueLastTenInvestor);
+                        if (amountToken <= amountLastToken) {
+                            count = count.add(arrayPaidTokenLastDay[lastNumberInvestor-1].amountToken);
+                            ethCurrentInvestor = valueLastTenInvestor.mul(arrayPaidTokenLastDay[lastNumberInvestor-1].amountToken);
+                        } else {
+                            ethCurrentInvestor = valueLastTenInvestor.mul(amountLastToken.sub(count));
+                        }
+                        currInvestor.transfer(ethCurrentInvestor);
+                        totalPrize = totalPrize.add(ethCurrentInvestor);
+                        profit = profit.add(ethCurrentInvestor);
                         if (amountToken >= amountLastToken) {
                             step = amountLastToken.add(1);
                         }
@@ -303,7 +318,7 @@ contract InvestorStorage is Ownable {
         }
     }
 
-    function getCountInvestLastToken() internal view returns (uint256 count) {
+    function getCountInvestLastToken() public view returns (uint256 count) {
         uint256 lastNumberInvestor = arrayPaidTokenLastDay.length;
         uint256 step = 0;
         uint256 amountToken = 0;
@@ -473,7 +488,7 @@ contract HouseStorage is Ownable, InvestorStorage {
             if (countPaidTokenPrevDay > 0) {
                 firstDay = false;
             }
-            if (numberStartBuildHouse.add(2) < numberCheckDay) {
+            if (numberStartBuildHouse.add(2) < numberCheckDay && houses[currentHouse].paymentTokenTotal > 0) {
                 firstDay = false;
             }
             if (!firstDay) {
@@ -667,10 +682,7 @@ contract HouseStorage is Ownable, InvestorStorage {
     function getSaleToken(address _investor, uint256 _date) internal returns(bool result) {
         require(_investor != address(0));
         result = false;
-        uint256 numberCheckDay = getNumberDay(getCurrentDate());
-        uint256 countPaidTokenPrevDay = paidPerDay[numberCheckDay];
-
-        require(stopBuyTokens && countPaidTokenPrevDay == 0);
+        require(stopBuyTokens);
         saleToken(_investor, _date);
         result = true;
     }

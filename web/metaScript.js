@@ -1,4 +1,4 @@
-var adrressContractRopsten = "0x4958a340cb2e03f9405df523b5cf1e3b792935a6";
+var adrressContractRopsten = "0xc66cf9d20000989280098dabb9304ac2258f4884";
 var adrressContractMain = "0xe4a60882c473e008b4e1c942bd73addf50483825";
 var contract;
 var SECUND_TO_DAY = 86400;
@@ -1025,6 +1025,20 @@ function initContract() {
             "outputs": [
                 {
                     "name": "amountTokenLastDayIfLessTen",
+                    "type": "uint256"
+                }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "getCountInvestLastToken",
+            "outputs": [
+                {
+                    "name": "count",
                     "type": "uint256"
                 }
             ],
