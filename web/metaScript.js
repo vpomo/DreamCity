@@ -1,4 +1,4 @@
-var adrressContractRopsten = "0xc66cf9d20000989280098dabb9304ac2258f4884";
+var adrressContractRopsten = "0x372a242156200a42a06213e31b74a310fac6aaa4";
 var adrressContractMain = "0xe4a60882c473e008b4e1c942bd73addf50483825";
 var contract;
 var SECUND_TO_DAY = 86400;
