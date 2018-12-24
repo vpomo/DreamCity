@@ -59,7 +59,12 @@ function startApp() {
                 var numberDayStopBuild = Math.trunc(dataTimeInfo[0]/SECUND_TO_DAY);
                 //numberDayStopBuild += 2;
 
-                var startTimeBuild = timeConverter(Math.trunc(dataTimeInfo[0]/SECUND_TO_DAY)*SECUND_TO_DAY);
+                var startTimeBuild = 0;
+                if (Number(currHouse) > 1) {
+                    startTimeBuild = timeConverter(Math.trunc(dataTimeInfo[0]/SECUND_TO_DAY +1)*SECUND_TO_DAY + 60);
+                } else {
+                    startTimeBuild = timeConverter(Math.trunc(dataTimeInfo[0]/SECUND_TO_DAY)*SECUND_TO_DAY);
+                }
 
                 var stopTimeBuild;
                 var startTimeBuildNext;
@@ -137,9 +142,6 @@ function startApp() {
                     $('#priceTokenNext').html(EMPTY_VALUE);
                 }
 
-                // $('#startTimeBuild').html(startTimeBuild);
-                // $('#stopTimeBuild').html(stopTimeBuild);
-                // $('#startTimeBuildNext').html(startTimeBuildNext);
 
                 contract.getFreeTokenPerFloor(currHouse, function (error, dataGetFreeTokenPerFloor) {
                     console.log("getFreeTokenPerFloor = " + JSON.stringify(dataGetFreeTokenPerFloor));

@@ -51,28 +51,6 @@ it('check count', async ()  => {
 });
 */
 
-    it('check stop buy token', async ()  => {
-        await contract.setDemo();
-        await contract.setStartDate(1545444000); //Sat, 22 Dec 2018 02:00:00 GMT
-        await contract.setSimulateDate(1545444000); //Sat, 22 Dec 2018 02:00:00 GMT
-        await contract.buyTokens(accounts[1], {from:accounts[1], value: 0.1*decimal});//8
-        // await contract.buyTokens(accounts[2], {from:accounts[2], value: 0.1*decimal});//2
-        // await contract.buyTokens(accounts[3], {from:accounts[3], value: 0.1*decimal});//8
-        // await contract.buyTokens(accounts[4], {from:accounts[4], value: 0.1*decimal});//4
-        // await contract.buyTokens(accounts[5], {from:accounts[5], value: 0.1*decimal});//2
-
-//         await contract.setSimulateDate(1545616800); //24 Dec 2018 02:00:00 GMT
-//         await contract.buyTokens(accounts[1], {from:accounts[1], value: 0.05*decimal});//8
-// var stopBuyToken = await contract.checkStopBuyTokens.call(1545616800, 0.1*decimal, {from:accounts[4]});
-// console.log("stopBuyToken", stopBuyToken);
-
-        await contract.setSimulateDate(1545876000); //27 Dec 2018 02:00:00 GMT
-        await contract.buyTokens(accounts[1], {from:accounts[1], value: 0.05*decimal});//8
-
-        stopBuyToken = await contract.checkStopBuyTokens.call(1545876000, 0.1*decimal, {from:accounts[4]});
-        console.log("stopBuyToken", stopBuyToken);
-
-    });
 
 /*
 it('check round price', async ()  => {
