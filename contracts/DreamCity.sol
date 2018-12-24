@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 
 library SafeMath {
@@ -471,8 +471,7 @@ contract HouseStorage is Ownable, InvestorStorage {
         stopTimeBuild = houses[_numberHouse].stopTimeBuild;
     }
 
-    function checkStopBuyTokens(uint256 _date, uint256 _value) public returns(bool) { //for test's
-        //function checkStopBuyTokens(uint256 _date, uint256 _value) internal returns(bool) {
+    function checkStopBuyTokens(uint256 _date, uint256 _value) internal returns(bool) { //for test's
         uint256 timeLastPayment = startTime;
         uint256 countPaidTokenPrevDay = 0;
         uint lastNumberInvestor = 0;
@@ -592,8 +591,7 @@ contract HouseStorage is Ownable, InvestorStorage {
         return houses[_numberHouse].paymentTokenTotal;
     }
 
-    function getBuyToken(uint256 _amountEth) public returns(uint256 totalTokens, uint256 remainEth, bool lastFloorPerHouse) { // for test's
-        //function getBuyToken(uint256 _amountEth) internal returns(uint256 totalTokens, uint256 remainEth, bool lastFloorPerHouse) {
+    function getBuyToken(uint256 _amountEth) internal returns(uint256 totalTokens, uint256 remainEth, bool lastFloorPerHouse) { // for test's
         lastFloorPerHouse = false;
         bool lastFloor = houses[currentHouse].lastFloor.add(1) >= maxNumberFloorPerHouse;
         uint256 priceToken = houses[currentHouse].priceToken;
@@ -655,8 +653,7 @@ contract HouseStorage is Ownable, InvestorStorage {
         }
     }
 
-    function getBuyTokenAdmin(uint256 _amountEth) public returns(uint256 totalTokens, uint256 remainEth) { // for test's
-//    function getBuyTokenAdmin(uint256 _amountEth) internal returns(uint256 totalTokens, uint256 remainEth) { // for test's
+    function getBuyTokenAdmin(uint256 _amountEth) internal returns(uint256 totalTokens, uint256 remainEth) { // for test's
         require(_amountEth > 0);
         totalTokens = _amountEth.div(averagePriceToken);
         if (maxBuyTokenToAdministration.add(1) > totalTokens) {
@@ -669,8 +666,7 @@ contract HouseStorage is Ownable, InvestorStorage {
         }
     }
 
-    function getDifferentEth(uint256 _amountToken, uint256 _amountEth, uint256 _priceToken) public pure returns(uint256 result) {  //for test's
-        //function getDifferentEth(uint256 _amountToken, uint256 _amountEth, uint256 _priceToken) internal pure returns(uint256 result) {
+    function getDifferentEth(uint256 _amountToken, uint256 _amountEth, uint256 _priceToken) internal pure returns(uint256 result) {  //for test's
         uint256 realEth = _amountToken.mul(_priceToken);
         if (realEth <= _amountEth) {
             result = _amountEth.sub(realEth);
@@ -780,18 +776,16 @@ contract DreamCity is Ownable, HouseStorage {
     event ChangeAddressWallet(address indexed owner, address indexed newAddress, address indexed oldAddress);
 
 
-    constructor(address _owner, address _ownerTwo, address _administrationWallet) public
+    constructor(address _owner) public
     {
         require(_owner != address(0));
-        require(_ownerTwo != address(0));
-        require(_administrationWallet != address(0));
         owner = _owner;
-        ownerTwo = _ownerTwo;
-        administrationWallet = _administrationWallet;
-        owner = msg.sender; // for test's
+        owner = msg.sender;
+        ownerTwo = _owner;
+        administrationWallet = _owner;
         averagePriceToken = FIRST_PRICE_TOKEN;
         currentHouse = 1;
-        addToAdminlist(administrationWallet);
+        addToAdminlist(_owner);
         initHouse(1, FIRST_PRICE_TOKEN);
     }
 
@@ -856,15 +850,15 @@ contract DreamCity is Ownable, HouseStorage {
         }
     }
 
-function claimEth() public onlyOwner {
-    require(finishProject);
-    uint256 amountEth = address(this).balance;
-    if (amountEth > 0){
-        administrationWallet.transfer(amountEth);
+    function claimEth() public onlyOwner {
+        require(finishProject);
+        uint256 amountEth = address(this).balance;
+        if (amountEth > 0){
+            administrationWallet.transfer(amountEth);
+        }
     }
-}
 
-function saleTokens(address _investor) public payable {
+    function saleTokens(address _investor) public payable {
         require(_investor != address(0));
         require(msg.value == ETH_FOR_SALE_TOKEN);
         uint256 currentDate = getCurrentDate();
