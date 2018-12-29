@@ -1,4 +1,4 @@
-pragma solidity ^0.4.25;
+pragma solidity >0.4.99 <0.6.0;
 
 
 library SafeMath {
@@ -114,7 +114,7 @@ contract InvestorStorage is Ownable {
     }
 
     struct PaidTokenLastDay {
-        address investor;
+        address payable investor;
         uint256 amountToken;
         uint256 paymentTime;
     }
@@ -154,7 +154,7 @@ contract InvestorStorage is Ownable {
     }
 
     function newInvestor(
-        address _investor, uint256 _investment, uint256 _amountToken,
+        address payable _investor, uint256 _investment, uint256 _amountToken,
         uint256 _paymentTime, uint256 _currentHouse
     ) internal returns (bool) {
         if (!checkNewInvestor(_investor)) {
@@ -174,7 +174,7 @@ contract InvestorStorage is Ownable {
     }
 
     function addFundToInvestor(
-        address _investor, uint256 _investment, uint256 _amountToken,
+        address payable _investor, uint256 _investment, uint256 _amountToken,
         uint256 _paymentTime, uint256 _currentHouse
     ) internal {
         Investor storage inv = investors[_investor];
@@ -191,7 +191,7 @@ contract InvestorStorage is Ownable {
         emit TokenPurchaise(_investor, _paymentTime, _investment, _amountToken);
     }
 
-    function setPaidLastInvestorPerDay(address _investor, uint256 _amountToken, uint256 _paymentTime) internal {
+    function setPaidLastInvestorPerDay(address payable _investor, uint256 _amountToken, uint256 _paymentTime) internal {
         require(_investor != address(0));
         require(_amountToken >= 0);
         require(_paymentTime >= 0);
@@ -266,7 +266,7 @@ contract InvestorStorage is Ownable {
     function ethTransferLastInvestors(uint256 _value) internal returns(uint256 profit) {
         require(arrayPaidTokenLastDay.length > 0);
         uint256 valueLastInvestor = _value.mul(percentToLastToken).div(100);
-        address currInvestor = address(0);
+        address payable currInvestor = address(0);
         uint lastNumberInvestor = arrayPaidTokenLastDay.length;
         uint256 amountToken = 0;
         profit = 0;
@@ -397,12 +397,11 @@ contract HouseStorage is Ownable, InvestorStorage {
 
     uint256 public numberTokensPerFloor = 50; //for test's
     uint256 public maxNumberFloorPerHouse = 9 * 10**18; //for test's
-    uint256 public minNumberSalesTokens = 10;
     uint256 public tokensCostIncreaseRatio = 105;
     uint256 public percentToAdministration = 18;
     uint256 public maxBuyTokenToAdministration = 1000;
 
-    address public administrationWallet;
+    address payable public administrationWallet;
 
     bool public finishProject;
     bool firstDay = false;
@@ -431,7 +430,7 @@ contract HouseStorage is Ownable, InvestorStorage {
         stopBuyTokens = false;
         finishProject = false;
         startTime = now; //for test's
-//        startTime = 0; //for test's
+        //startTime = 0; //for test's
         simulateDate = startTime;
     }
 
@@ -491,7 +490,7 @@ contract HouseStorage is Ownable, InvestorStorage {
                 firstDay = false;
             }
             if (!firstDay) {
-                if (countPaidTokenPrevDay < minNumberSalesTokens) {
+                if (countPaidTokenPrevDay < amountLastToken) {
                     makeStopBuyTokens();
                 }
             }
@@ -675,7 +674,7 @@ contract HouseStorage is Ownable, InvestorStorage {
         }
     }
 
-    function getSaleToken(address _investor, uint256 _date) internal returns(bool result) {
+    function getSaleToken(address payable _investor, uint256 _date) internal returns(bool result) {
         require(_investor != address(0));
         result = false;
         require(stopBuyTokens);
@@ -694,7 +693,7 @@ contract HouseStorage is Ownable, InvestorStorage {
         result = roundPrice(result, 3);
     }
 
-    function saleToken(address _investor, uint256 _date) internal {
+    function saleToken(address payable _investor, uint256 _date) internal {
         require(_investor != address(0));
         require(currentHouse > 0);
         Investor storage inv = investors[_investor];
@@ -776,11 +775,10 @@ contract DreamCity is Ownable, HouseStorage {
     event ChangeAddressWallet(address indexed owner, address indexed newAddress, address indexed oldAddress);
 
 
-    constructor(address _owner) public
+    constructor(address payable _owner) public
     {
         require(_owner != address(0));
         owner = _owner;
-        owner = msg.sender;
         ownerTwo = _owner;
         administrationWallet = _owner;
         averagePriceToken = FIRST_PRICE_TOKEN;
@@ -790,7 +788,7 @@ contract DreamCity is Ownable, HouseStorage {
     }
 
     // fallback function can be used to buy tokens
-    function() payable public {
+    function() payable external {
         if (msg.value >= averagePriceToken) {
             buyTokens(msg.sender);
         } else if (msg.value == ETH_FOR_SALE_TOKEN) {
@@ -800,13 +798,13 @@ contract DreamCity is Ownable, HouseStorage {
         }
     }
 
-    function refundEth(address _investor, uint256 _value) internal returns (bool) {
+    function refundEth(address payable _investor, uint256 _value) internal returns (bool) {
         require(_investor != address(0));
         _investor.transfer(_value);
         emit RefundEth(_investor, _value);
     }
 
-    function buyTokens(address _investor) public payable returns (uint256 tokens){
+    function buyTokens(address payable _investor) public payable returns (uint256 tokens){
         require(_investor != address(0));
         uint256 weiAmount = msg.value;
         tokens = 0;
@@ -858,7 +856,7 @@ contract DreamCity is Ownable, HouseStorage {
         }
     }
 
-    function saleTokens(address _investor) public payable {
+    function saleTokens(address payable _investor) public payable {
         require(_investor != address(0));
         require(msg.value == ETH_FOR_SALE_TOKEN);
         uint256 currentDate = getCurrentDate();
@@ -905,7 +903,7 @@ contract DreamCity is Ownable, HouseStorage {
 
     function setMinNumberSalesTokens(uint256 _number) external onlyOwner {
         require(_number > 0);
-        minNumberSalesTokens = _number;
+        amountLastToken = _number;
     }
 
     function setMaxNumberFloorPerHouse(uint256 _number) external onlyOwner {
@@ -913,7 +911,7 @@ contract DreamCity is Ownable, HouseStorage {
         maxNumberFloorPerHouse = _number;
     }
 
-    function setAdministrationWallet(address _newWallet) external onlyOwner {
+    function setAdministrationWallet(address payable _newWallet) external onlyOwner {
         require(_newWallet != address(0));
         address _oldWallet = administrationWallet;
         administrationWallet = _newWallet;
